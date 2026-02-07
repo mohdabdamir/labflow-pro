@@ -57,6 +57,27 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Clinical status colors
+        status: {
+          received: "hsl(var(--status-received))",
+          "in-process": "hsl(var(--status-in-process))",
+          completed: "hsl(var(--status-completed))",
+          reported: "hsl(var(--status-reported))",
+        },
+        // Result indicators
+        result: {
+          normal: "hsl(var(--result-normal))",
+          abnormal: "hsl(var(--result-abnormal))",
+          critical: "hsl(var(--result-critical))",
+        },
+        // Department colors
+        dept: {
+          hematology: "hsl(var(--dept-hematology))",
+          biochemistry: "hsl(var(--dept-biochemistry))",
+          microbiology: "hsl(var(--dept-microbiology))",
+          immunology: "hsl(var(--dept-immunology))",
+          pathology: "hsl(var(--dept-pathology))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,25 +86,31 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "pulse-subtle": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.7" },
+        },
+        "slide-in-right": {
+          "0%": { transform: "translateX(100%)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
+        "slide-in-right": "slide-in-right 0.3s ease-out",
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "Menlo", "monospace"],
       },
     },
   },
