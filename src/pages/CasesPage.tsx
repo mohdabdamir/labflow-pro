@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -24,25 +24,46 @@ import {
   Filter, 
   MoreHorizontal,
   Eye,
-  Edit,
-  Trash2,
-  FileText
+  Beaker,
+  FlaskConical,
+  CheckCircle2,
+  FileText,
+  Trash2
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useCases } from '@/hooks/useLabData';
-import { StatusBadge, PriorityIndicator } from '@/components/cases';
-import type { CaseStatus } from '@/types/lab';
+import { 
+  StatusBadge, 
+  PriorityIndicator, 
+  CaseCreationWizard,
+  SampleCollectionDialog,
+  ResultEntryDialog,
+  CaseDetailDrawer
+} from '@/components/cases';
+import { ReportPreviewDialog } from '@/components/reports';
+import type { Case, CaseStatus, CaseTest, Sample } from '@/types/lab';
+import { toast } from 'sonner';
 
 export default function CasesPage() {
-  const { cases, deleteCase } = useCases();
+  const { cases, addCase, updateCase, deleteCase } = useCases();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<CaseStatus | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'routine' | 'urgent' | 'stat'>('all');
+
+  // Dialog states
+  const [createWizardOpen, setCreateWizardOpen] = useState(false);
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [sampleCollectionOpen, setSampleCollectionOpen] = useState(false);
+  const [resultEntryOpen, setResultEntryOpen] = useState(false);
+  const [validationOpen, setValidationOpen] = useState(false);
+  const [reportPreviewOpen, setReportPreviewOpen] = useState(false);
 
   const filteredCases = useMemo(() => {
     return cases.filter(caseItem => {
@@ -61,7 +82,61 @@ export default function CasesPage() {
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this case?')) {
       deleteCase(id);
+      toast.success('Case deleted');
     }
+  };
+
+  const handleCaseCreated = (newCase: Case) => {
+    addCase(newCase);
+    toast.success(`Case ${newCase.caseNumber} created`);
+  };
+
+  const handleSamplesCollected = (samples: Sample[]) => {
+    if (!selectedCase) return;
+    
+    const updatedStatus: CaseStatus = samples.length > 0 ? 'sample-collected' : selectedCase.status;
+    updateCase(selectedCase.id, {
+      samples,
+      status: updatedStatus,
+      collectionDate: new Date().toISOString(),
+    });
+    toast.success('Samples collected successfully');
+  };
+
+  const handleResultsSaved = (tests: CaseTest[]) => {
+    if (!selectedCase) return;
+    
+    const allCompleted = tests.every(t => t.status === 'completed' || t.status === 'validated');
+    const allValidated = tests.every(t => t.status === 'validated');
+    
+    let newStatus: CaseStatus = selectedCase.status;
+    if (allValidated) {
+      newStatus = 'completed';
+    } else if (allCompleted || tests.some(t => t.result)) {
+      newStatus = 'in-process';
+    }
+
+    updateCase(selectedCase.id, {
+      tests,
+      status: newStatus,
+      ...(allCompleted ? { completedDate: new Date().toISOString() } : {}),
+    });
+  };
+
+  const handleGenerateReport = () => {
+    if (!selectedCase) return;
+    
+    // Update status to reported
+    updateCase(selectedCase.id, {
+      status: 'reported',
+      reportedDate: new Date().toISOString(),
+    });
+    setReportPreviewOpen(true);
+  };
+
+  const openCaseDetail = (caseItem: Case) => {
+    setSelectedCase(caseItem);
+    setDetailDrawerOpen(true);
   };
 
   const formatDate = (dateStr: string) => {
@@ -72,6 +147,17 @@ export default function CasesPage() {
       minute: '2-digit',
     });
   };
+
+  // Statistics
+  const stats = useMemo(() => ({
+    total: cases.length,
+    registered: cases.filter(c => c.status === 'registered').length,
+    sampleCollected: cases.filter(c => c.status === 'sample-collected').length,
+    received: cases.filter(c => c.status === 'received').length,
+    inProcess: cases.filter(c => c.status === 'in-process').length,
+    completed: cases.filter(c => c.status === 'completed').length,
+    urgentStat: cases.filter(c => c.priority !== 'routine').length,
+  }), [cases]);
 
   return (
     <MainLayout title="Cases / Worklist">
@@ -89,12 +175,14 @@ export default function CasesPage() {
               />
             </div>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as CaseStatus | 'all')}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-44">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="registered">Registered</SelectItem>
+                <SelectItem value="sample-collected">Sample Collected</SelectItem>
                 <SelectItem value="received">Received</SelectItem>
                 <SelectItem value="in-process">In Process</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
@@ -113,42 +201,54 @@ export default function CasesPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button>
+          <Button onClick={() => setCreateWizardOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Case
           </Button>
         </div>
 
         {/* Stats Summary */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Card>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          <Card className="bg-card">
             <CardContent className="pt-4 pb-3">
-              <p className="text-xs text-muted-foreground">Total Cases</p>
-              <p className="text-2xl font-bold">{cases.length}</p>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-2xl font-bold">{stats.total}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-3">
-              <p className="text-xs text-muted-foreground">Pending</p>
-              <p className="text-2xl font-bold text-status-received">
-                {cases.filter(c => c.status === 'received').length}
-              </p>
+              <p className="text-xs text-muted-foreground">Registered</p>
+              <p className="text-2xl font-bold text-muted-foreground">{stats.registered}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-3">
+              <p className="text-xs text-muted-foreground">Collected</p>
+              <p className="text-2xl font-bold text-purple-500">{stats.sampleCollected}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-3">
+              <p className="text-xs text-muted-foreground">Received</p>
+              <p className="text-2xl font-bold text-status-received">{stats.received}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-3">
               <p className="text-xs text-muted-foreground">In Process</p>
-              <p className="text-2xl font-bold text-status-in-process">
-                {cases.filter(c => c.status === 'in-process').length}
-              </p>
+              <p className="text-2xl font-bold text-status-in-process">{stats.inProcess}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-3">
+              <p className="text-xs text-muted-foreground">Completed</p>
+              <p className="text-2xl font-bold text-status-completed">{stats.completed}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-3">
               <p className="text-xs text-muted-foreground">Urgent/STAT</p>
-              <p className="text-2xl font-bold text-result-critical">
-                {cases.filter(c => c.priority !== 'routine').length}
-              </p>
+              <p className="text-2xl font-bold text-destructive">{stats.urgentStat}</p>
             </CardContent>
           </Card>
         </div>
@@ -165,13 +265,17 @@ export default function CasesPage() {
                   <TableHead>Tests</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Received</TableHead>
+                  <TableHead>Date</TableHead>
                   <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCases.map((caseItem) => (
-                  <TableRow key={caseItem.id} className="hover:bg-muted/50">
+                  <TableRow 
+                    key={caseItem.id} 
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => openCaseDetail(caseItem)}
+                  >
                     <TableCell className="font-mono text-sm font-medium">
                       {caseItem.caseNumber}
                     </TableCell>
@@ -186,6 +290,11 @@ export default function CasesPage() {
                     <TableCell className="text-sm">{caseItem.clientName}</TableCell>
                     <TableCell>
                       <span className="text-sm font-medium">{caseItem.tests.length} tests</span>
+                      {caseItem.samples.length > 0 && (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({caseItem.samples.length} tubes)
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <PriorityIndicator priority={caseItem.priority} size="sm" />
@@ -194,9 +303,9 @@ export default function CasesPage() {
                       <StatusBadge status={caseItem.status} size="sm" />
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(caseItem.receivedDate)}
+                      {formatDate(caseItem.registeredDate)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -204,18 +313,47 @@ export default function CasesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openCaseDetail(caseItem)}>
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Case
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <FileText className="h-4 w-4 mr-2" />
-                            Generate Report
-                          </DropdownMenuItem>
+                          {caseItem.status === 'registered' && caseItem.samples.length === 0 && (
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedCase(caseItem);
+                              setSampleCollectionOpen(true);
+                            }}>
+                              <Beaker className="h-4 w-4 mr-2" />
+                              Collect Samples
+                            </DropdownMenuItem>
+                          )}
+                          {caseItem.samples.length > 0 && (
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedCase(caseItem);
+                              setResultEntryOpen(true);
+                            }}>
+                              <FlaskConical className="h-4 w-4 mr-2" />
+                              Enter Results
+                            </DropdownMenuItem>
+                          )}
+                          {caseItem.tests.some(t => t.status === 'completed') && (
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedCase(caseItem);
+                              setValidationOpen(true);
+                            }}>
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Validate Results
+                            </DropdownMenuItem>
+                          )}
+                          {caseItem.tests.every(t => t.status === 'validated') && (
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedCase(caseItem);
+                              handleGenerateReport();
+                            }}>
+                              <FileText className="h-4 w-4 mr-2" />
+                              Generate Report
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             className="text-destructive"
                             onClick={() => handleDelete(caseItem.id)}
@@ -240,6 +378,68 @@ export default function CasesPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialogs */}
+      <CaseCreationWizard
+        open={createWizardOpen}
+        onClose={() => setCreateWizardOpen(false)}
+        onSave={handleCaseCreated}
+      />
+
+      {selectedCase && (
+        <>
+          <CaseDetailDrawer
+            open={detailDrawerOpen}
+            onClose={() => setDetailDrawerOpen(false)}
+            caseData={selectedCase}
+            onCollectSamples={() => {
+              setDetailDrawerOpen(false);
+              setSampleCollectionOpen(true);
+            }}
+            onEnterResults={() => {
+              setDetailDrawerOpen(false);
+              setResultEntryOpen(true);
+            }}
+            onValidateResults={() => {
+              setDetailDrawerOpen(false);
+              setValidationOpen(true);
+            }}
+            onGenerateReport={() => {
+              setDetailDrawerOpen(false);
+              handleGenerateReport();
+            }}
+          />
+
+          <SampleCollectionDialog
+            open={sampleCollectionOpen}
+            onClose={() => setSampleCollectionOpen(false)}
+            caseData={selectedCase}
+            onSave={handleSamplesCollected}
+          />
+
+          <ResultEntryDialog
+            open={resultEntryOpen}
+            onClose={() => setResultEntryOpen(false)}
+            caseData={selectedCase}
+            onSave={handleResultsSaved}
+            mode="entry"
+          />
+
+          <ResultEntryDialog
+            open={validationOpen}
+            onClose={() => setValidationOpen(false)}
+            caseData={selectedCase}
+            onSave={handleResultsSaved}
+            mode="validation"
+          />
+
+          <ReportPreviewDialog
+            open={reportPreviewOpen}
+            onClose={() => setReportPreviewOpen(false)}
+            caseData={selectedCase}
+          />
+        </>
+      )}
     </MainLayout>
   );
 }

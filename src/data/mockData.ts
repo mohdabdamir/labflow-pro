@@ -8,7 +8,8 @@ import type {
   NormalRange,
   Package,
   PriceList,
-  User 
+  User,
+  Sample
 } from '@/types/lab';
 
 // Mock Users
@@ -133,7 +134,7 @@ export const mockNormalRanges: NormalRange[] = [
   { id: 'NR042', serviceId: 'S042', gender: 'All', normalLow: 5.0, normalHigh: 12.0, unit: 'µg/dL' },
 ];
 
-// Mock Cases
+// Mock Cases with updated structure
 export const mockCases: Case[] = [
   {
     id: 'CS001',
@@ -142,17 +143,27 @@ export const mockCases: Case[] = [
     patientId: 'PAT001',
     patientAge: 45,
     patientGender: 'Male',
+    patientPhone: '555-1234',
     clientId: 'C001',
     clientName: 'Walk-in Patient',
     status: 'completed',
     priority: 'routine',
+    registeredDate: '2024-02-01T08:00:00',
     collectionDate: '2024-02-01T08:30:00',
     receivedDate: '2024-02-01T09:00:00',
     completedDate: '2024-02-01T11:00:00',
+    subtotal: 150,
+    discountPercent: 0,
+    discountAmount: 0,
+    totalAmount: 150,
+    paymentStatus: 'paid',
+    paidAmount: 150,
+    samples: [
+      { id: 'SM001', tubeId: 'ED1A2B3C4D', sampleType: 'EDTA Blood', status: 'completed', collectedAt: '2024-02-01T08:30:00', testIds: ['S002', 'S003'] }
+    ],
     tests: [
-      { testId: 'S001', testCode: 'CBC', testName: 'Complete Blood Count', status: 'completed', result: 'See components', flag: 'normal' },
-      { testId: 'S002', testCode: 'HGB', testName: 'Hemoglobin', status: 'completed', result: '14.5', unit: 'g/dL', flag: 'normal', normalRange: '13.5-17.5' },
-      { testId: 'S003', testCode: 'WBC', testName: 'White Blood Cell Count', status: 'completed', result: '7.2', unit: 'x10³/µL', flag: 'normal', normalRange: '4.5-11.0' },
+      { testId: 'S002', testCode: 'HGB', testName: 'Hemoglobin', department: 'Hematology', sampleType: 'EDTA Blood', price: 50, status: 'completed', result: '14.5', unit: 'g/dL', flag: 'normal', normalRange: '13.5-17.5' },
+      { testId: 'S003', testCode: 'WBC', testName: 'White Blood Cell Count', department: 'Hematology', sampleType: 'EDTA Blood', price: 50, status: 'completed', result: '7.2', unit: 'x10³/µL', flag: 'normal', normalRange: '4.5-11.0' },
     ]
   },
   {
@@ -162,16 +173,27 @@ export const mockCases: Case[] = [
     patientId: 'PAT002',
     patientAge: 32,
     patientGender: 'Female',
+    patientPhone: '555-2345',
     clientId: 'C002',
     clientName: 'City General Hospital',
     status: 'in-process',
     priority: 'urgent',
+    registeredDate: '2024-02-01T09:30:00',
     collectionDate: '2024-02-01T10:00:00',
     receivedDate: '2024-02-01T10:30:00',
+    subtotal: 280,
+    discountPercent: 10,
+    discountAmount: 28,
+    totalAmount: 252,
+    paymentStatus: 'pending',
+    paidAmount: 0,
+    samples: [
+      { id: 'SM002', tubeId: 'SR5E6F7G8H', sampleType: 'Serum', status: 'processing', collectedAt: '2024-02-01T10:00:00', testIds: ['S020', 'S021', 'S023'] }
+    ],
     tests: [
-      { testId: 'S020', testCode: 'ALT', testName: 'Alanine Aminotransferase', status: 'completed', result: '85', unit: 'U/L', flag: 'abnormal', normalRange: '7-56' },
-      { testId: 'S021', testCode: 'AST', testName: 'Aspartate Aminotransferase', status: 'completed', result: '62', unit: 'U/L', flag: 'abnormal', normalRange: '10-40' },
-      { testId: 'S023', testCode: 'TBIL', testName: 'Total Bilirubin', status: 'processing' },
+      { testId: 'S020', testCode: 'ALT', testName: 'Alanine Aminotransferase', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'completed', result: '85', unit: 'U/L', flag: 'abnormal', normalRange: '7-56' },
+      { testId: 'S021', testCode: 'AST', testName: 'Aspartate Aminotransferase', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'completed', result: '62', unit: 'U/L', flag: 'abnormal', normalRange: '10-40' },
+      { testId: 'S023', testCode: 'TBIL', testName: 'Total Bilirubin', department: 'Biochemistry', sampleType: 'Serum', price: 80, status: 'processing' },
     ]
   },
   {
@@ -181,17 +203,29 @@ export const mockCases: Case[] = [
     patientId: 'PAT003',
     patientAge: 58,
     patientGender: 'Male',
+    patientPhone: '555-3456',
     clientId: 'C003',
     clientName: 'Wellness Medical Clinic',
     status: 'received',
     priority: 'stat',
+    registeredDate: '2024-02-01T11:00:00',
     collectionDate: '2024-02-01T11:30:00',
     receivedDate: '2024-02-01T11:45:00',
+    subtotal: 610,
+    discountPercent: 15,
+    discountAmount: 91.5,
+    totalAmount: 518.5,
+    paymentStatus: 'partial',
+    paidAmount: 200,
+    samples: [
+      { id: 'SM003', tubeId: 'SR9I0J1K2L', sampleType: 'Serum', status: 'received', collectedAt: '2024-02-01T11:30:00', testIds: ['S010', 'S030', 'S031'] },
+      { id: 'SM004', tubeId: 'ED3M4N5O6P', sampleType: 'EDTA Blood', status: 'received', collectedAt: '2024-02-01T11:30:00', testIds: ['S012'] }
+    ],
     tests: [
-      { testId: 'S010', testCode: 'GLU', testName: 'Glucose Fasting', status: 'pending' },
-      { testId: 'S012', testCode: 'HBA1C', testName: 'Glycated Hemoglobin', status: 'pending' },
-      { testId: 'S030', testCode: 'CHOL', testName: 'Total Cholesterol', status: 'pending' },
-      { testId: 'S031', testCode: 'TG', testName: 'Triglycerides', status: 'pending' },
+      { testId: 'S010', testCode: 'GLU', testName: 'Glucose Fasting', department: 'Biochemistry', sampleType: 'Serum', price: 60, status: 'pending' },
+      { testId: 'S012', testCode: 'HBA1C', testName: 'Glycated Hemoglobin', department: 'Biochemistry', sampleType: 'EDTA Blood', price: 350, status: 'pending' },
+      { testId: 'S030', testCode: 'CHOL', testName: 'Total Cholesterol', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'pending' },
+      { testId: 'S031', testCode: 'TG', testName: 'Triglycerides', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'pending' },
     ]
   },
   {
@@ -201,18 +235,29 @@ export const mockCases: Case[] = [
     patientId: 'PAT004',
     patientAge: 28,
     patientGender: 'Female',
+    patientPhone: '555-4567',
     clientId: 'C001',
     clientName: 'Walk-in Patient',
     status: 'reported',
     priority: 'routine',
+    registeredDate: '2024-01-31T13:30:00',
     collectionDate: '2024-01-31T14:00:00',
     receivedDate: '2024-01-31T14:30:00',
     completedDate: '2024-01-31T17:00:00',
     reportedDate: '2024-01-31T17:30:00',
+    subtotal: 650,
+    discountPercent: 0,
+    discountAmount: 0,
+    totalAmount: 650,
+    paymentStatus: 'paid',
+    paidAmount: 650,
+    samples: [
+      { id: 'SM005', tubeId: 'SR7Q8R9S0T', sampleType: 'Serum', status: 'completed', collectedAt: '2024-01-31T14:00:00', testIds: ['S040', 'S041', 'S042'] }
+    ],
     tests: [
-      { testId: 'S040', testCode: 'TSH', testName: 'Thyroid Stimulating Hormone', status: 'completed', result: '2.8', unit: 'mIU/L', flag: 'normal', normalRange: '0.4-4.0' },
-      { testId: 'S041', testCode: 'T3', testName: 'Triiodothyronine', status: 'completed', result: '125', unit: 'ng/dL', flag: 'normal', normalRange: '80-200' },
-      { testId: 'S042', testCode: 'T4', testName: 'Thyroxine', status: 'completed', result: '7.5', unit: 'µg/dL', flag: 'normal', normalRange: '5.0-12.0' },
+      { testId: 'S040', testCode: 'TSH', testName: 'Thyroid Stimulating Hormone', department: 'Immunology', sampleType: 'Serum', price: 250, status: 'validated', result: '2.8', unit: 'mIU/L', flag: 'normal', normalRange: '0.4-4.0', validatedBy: 'Dr. Sarah Johnson', validatedAt: '2024-01-31T17:00:00' },
+      { testId: 'S041', testCode: 'T3', testName: 'Triiodothyronine', department: 'Immunology', sampleType: 'Serum', price: 200, status: 'validated', result: '125', unit: 'ng/dL', flag: 'normal', normalRange: '80-200', validatedBy: 'Dr. Sarah Johnson', validatedAt: '2024-01-31T17:00:00' },
+      { testId: 'S042', testCode: 'T4', testName: 'Thyroxine', department: 'Immunology', sampleType: 'Serum', price: 200, status: 'validated', result: '7.5', unit: 'µg/dL', flag: 'normal', normalRange: '5.0-12.0', validatedBy: 'Dr. Sarah Johnson', validatedAt: '2024-01-31T17:00:00' },
     ]
   },
   {
@@ -222,16 +267,54 @@ export const mockCases: Case[] = [
     patientId: 'PAT005',
     patientAge: 65,
     patientGender: 'Male',
+    patientPhone: '555-5678',
     clientId: 'C004',
     clientName: 'United Insurance Corp',
     status: 'in-process',
     priority: 'routine',
+    registeredDate: '2024-02-01T08:30:00',
     collectionDate: '2024-02-01T09:00:00',
     receivedDate: '2024-02-01T09:30:00',
+    subtotal: 240,
+    discountPercent: 20,
+    discountAmount: 48,
+    totalAmount: 192,
+    paymentStatus: 'pending',
+    paidAmount: 0,
+    samples: [
+      { id: 'SM006', tubeId: 'SR1U2V3W4X', sampleType: 'Serum', status: 'processing', collectedAt: '2024-02-01T09:00:00', testIds: ['S013', 'S014', 'S015'] }
+    ],
     tests: [
-      { testId: 'S013', testCode: 'UREA', testName: 'Blood Urea Nitrogen', status: 'completed', result: '28', unit: 'mg/dL', flag: 'abnormal', normalRange: '7-20' },
-      { testId: 'S014', testCode: 'CREAT', testName: 'Creatinine', status: 'completed', result: '1.8', unit: 'mg/dL', flag: 'abnormal', normalRange: '0.7-1.3' },
-      { testId: 'S015', testCode: 'URIC', testName: 'Uric Acid', status: 'processing' },
+      { testId: 'S013', testCode: 'UREA', testName: 'Blood Urea Nitrogen', department: 'Biochemistry', sampleType: 'Serum', price: 70, status: 'completed', result: '28', unit: 'mg/dL', flag: 'abnormal', normalRange: '7-20' },
+      { testId: 'S014', testCode: 'CREAT', testName: 'Creatinine', department: 'Biochemistry', sampleType: 'Serum', price: 80, status: 'completed', result: '1.8', unit: 'mg/dL', flag: 'abnormal', normalRange: '0.7-1.3' },
+      { testId: 'S015', testCode: 'URIC', testName: 'Uric Acid', department: 'Biochemistry', sampleType: 'Serum', price: 90, status: 'processing' },
+    ]
+  },
+  {
+    id: 'CS006',
+    caseNumber: 'LAB-2024-00006',
+    patientName: 'Lisa Wong',
+    patientId: 'PAT006',
+    patientAge: 42,
+    patientGender: 'Female',
+    patientPhone: '555-6789',
+    clientId: 'C001',
+    clientName: 'Walk-in Patient',
+    status: 'registered',
+    priority: 'routine',
+    registeredDate: '2024-02-01T12:00:00',
+    subtotal: 350,
+    discountPercent: 0,
+    discountAmount: 0,
+    totalAmount: 350,
+    paymentStatus: 'paid',
+    paidAmount: 350,
+    samples: [],
+    tests: [
+      { testId: 'S030', testCode: 'CHOL', testName: 'Total Cholesterol', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'pending' },
+      { testId: 'S031', testCode: 'TG', testName: 'Triglycerides', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'pending' },
+      { testId: 'S032', testCode: 'HDL', testName: 'HDL Cholesterol', department: 'Biochemistry', sampleType: 'Serum', price: 75, status: 'pending' },
+      { testId: 'S033', testCode: 'LDL', testName: 'LDL Cholesterol', department: 'Biochemistry', sampleType: 'Serum', price: 75, status: 'pending' },
     ]
   },
 ];
@@ -246,4 +329,9 @@ export const generateCaseNumber = (): string => {
   const year = new Date().getFullYear();
   const random = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
   return `LAB-${year}-${random}`;
+};
+
+// Helper function to generate patient ID
+export const generatePatientId = (): string => {
+  return `PAT${Date.now().toString(36).toUpperCase()}`;
 };

@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/theme';
 
 interface HeaderProps {
   title?: string;
@@ -35,6 +36,9 @@ export function Header({ title }: HeaderProps) {
             className="w-64 pl-9 bg-background"
           />
         </div>
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
 
         {/* Notifications */}
         <DropdownMenu>
