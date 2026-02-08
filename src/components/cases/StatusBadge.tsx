@@ -8,6 +8,14 @@ interface StatusBadgeProps {
 }
 
 const statusConfig: Record<CaseStatus, { label: string; className: string }> = {
+  registered: {
+    label: 'Registered',
+    className: 'bg-muted text-muted-foreground border-border',
+  },
+  'sample-collected': {
+    label: 'Collected',
+    className: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+  },
   received: {
     label: 'Received',
     className: 'bg-status-received/10 text-status-received border-status-received/20',
@@ -40,6 +48,8 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
       <span className={cn(
         'rounded-full mr-1.5',
         size === 'sm' ? 'w-1.5 h-1.5' : 'w-2 h-2',
+        status === 'registered' && 'bg-muted-foreground',
+        status === 'sample-collected' && 'bg-purple-500',
         status === 'received' && 'bg-status-received',
         status === 'in-process' && 'bg-status-in-process animate-pulse-subtle',
         status === 'completed' && 'bg-status-completed',

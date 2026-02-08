@@ -1,7 +1,7 @@
 // Laboratory Information System - Core Type Definitions
 
-// Case/Sample Status
-export type CaseStatus = 'received' | 'in-process' | 'completed' | 'reported';
+// Case/Sample Status - now includes 'registered' for cases before sample collection
+export type CaseStatus = 'registered' | 'sample-collected' | 'received' | 'in-process' | 'completed' | 'reported';
 
 // Test Result Flags
 export type ResultFlag = 'normal' | 'abnormal' | 'critical' | null;
@@ -24,6 +24,26 @@ export type Gender = 'Male' | 'Female' | 'All';
 // Age Unit for normal ranges
 export type AgeUnit = 'days' | 'months' | 'years';
 
+// Sample/Tube Types
+export type SampleType = 'EDTA Blood' | 'Serum' | 'Plasma' | 'Urine' | 'Stool' | 'CSF' | 'Other';
+
+// Sample/Tube status
+export type SampleStatus = 'pending' | 'collected' | 'received' | 'processing' | 'completed';
+
+// Sample/Tube Record
+export interface Sample {
+  id: string;
+  tubeId: string; // Barcode ID for interfacing
+  sampleType: SampleType;
+  status: SampleStatus;
+  collectedAt?: string;
+  collectedBy?: string;
+  receivedAt?: string;
+  receivedBy?: string;
+  testIds: string[]; // Tests associated with this sample
+  notes?: string;
+}
+
 // Case/Sample Record
 export interface Case {
   id: string;
@@ -32,15 +52,30 @@ export interface Case {
   patientId: string;
   patientAge: number;
   patientGender: Gender;
+  patientDob?: string;
+  patientPhone?: string;
+  patientEmail?: string;
+  patientAddress?: string;
+  referringDoctor?: string;
+  clinicalNotes?: string;
   clientId: string;
   clientName: string;
   status: CaseStatus;
   priority: 'routine' | 'urgent' | 'stat';
-  collectionDate: string;
-  receivedDate: string;
+  registeredDate: string;
+  collectionDate?: string;
+  receivedDate?: string;
   completedDate?: string;
   reportedDate?: string;
   tests: CaseTest[];
+  samples: Sample[];
+  // Billing
+  subtotal: number;
+  discountPercent: number;
+  discountAmount: number;
+  totalAmount: number;
+  paymentStatus: 'pending' | 'partial' | 'paid';
+  paidAmount: number;
   notes?: string;
 }
 
@@ -49,13 +84,19 @@ export interface CaseTest {
   testId: string;
   testCode: string;
   testName: string;
-  status: 'pending' | 'processing' | 'completed';
+  department: Department;
+  sampleType: SampleType;
+  price: number;
+  status: 'pending' | 'processing' | 'completed' | 'validated';
   result?: string;
   unit?: string;
   flag?: ResultFlag;
   normalRange?: string;
+  enteredBy?: string;
+  enteredAt?: string;
   validatedBy?: string;
   validatedAt?: string;
+  validationNotes?: string;
 }
 
 // Service/Test Master
