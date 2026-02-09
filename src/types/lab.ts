@@ -16,13 +16,16 @@ export type Department =
   | 'Urinalysis';
 
 // Client Types
-export type ClientType = 'Individual' | 'Institution' | 'Insurance';
+export type ClientType = 'B2C' | 'B2B';
 
 // Gender for normal ranges
 export type Gender = 'Male' | 'Female' | 'All';
 
 // Age Unit for normal ranges
 export type AgeUnit = 'days' | 'months' | 'years';
+
+// Age input mode
+export type AgeInputMode = 'dob' | 'age' | 'none';
 
 // Sample/Tube Types
 export type SampleType = 'EDTA Blood' | 'Serum' | 'Plasma' | 'Urine' | 'Stool' | 'CSF' | 'Other';
@@ -69,6 +72,9 @@ export interface Case {
   reportedDate?: string;
   tests: CaseTest[];
   samples: Sample[];
+  // Track which profiles/packages were ordered
+  orderedProfileIds?: string[];
+  orderedPackageIds?: string[];
   // Billing
   subtotal: number;
   discountPercent: number;
@@ -76,6 +82,7 @@ export interface Case {
   totalAmount: number;
   paymentStatus: 'pending' | 'partial' | 'paid';
   paidAmount: number;
+  paymentRequired: boolean; // true for B2C (walk-in, home visit)
   notes?: string;
 }
 
@@ -97,6 +104,10 @@ export interface CaseTest {
   validatedBy?: string;
   validatedAt?: string;
   validationNotes?: string;
+  tubeId?: string; // Assigned tube ID
+  profileId?: string; // If part of a profile
+  profileName?: string; // Profile name for display
+  packageId?: string; // If part of a package
 }
 
 // Service/Test Master
@@ -155,6 +166,20 @@ export interface Client {
   billingTerms?: string;
   creditLimit?: number;
   isActive: boolean;
+  createdAt: string;
+}
+
+// Patient Record (stored separately for reuse)
+export interface Patient {
+  id: string;
+  name: string;
+  gender: Gender;
+  dob?: string;
+  age?: number;
+  ageInputMode: AgeInputMode;
+  phone?: string;
+  email?: string;
+  address?: string;
   createdAt: string;
 }
 

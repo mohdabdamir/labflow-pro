@@ -76,13 +76,14 @@ export const mockPackages: Package[] = [
   { id: 'PK003', code: 'CARDIAC', name: 'Cardiac Risk Profile', profiles: ['P004'], tests: ['S010', 'S012'], price: 600, validFrom: '2024-01-01', isActive: true },
 ];
 
-// Mock Clients
+// Mock Clients - updated with B2C/B2B types
 export const mockClients: Client[] = [
-  { id: 'C001', code: 'WALKIN', name: 'Walk-in Patient', type: 'Individual', isActive: true, createdAt: '2024-01-01' },
-  { id: 'C002', code: 'CITYHSP', name: 'City General Hospital', type: 'Institution', email: 'lab@cityhospital.com', phone: '555-0100', address: '123 Medical Center Dr', city: 'Metro City', creditLimit: 50000, isActive: true, createdAt: '2024-01-01' },
-  { id: 'C003', code: 'WELLNESS', name: 'Wellness Medical Clinic', type: 'Institution', email: 'info@wellnessmc.com', phone: '555-0200', address: '456 Health Ave', city: 'Metro City', creditLimit: 25000, isActive: true, createdAt: '2024-01-15' },
-  { id: 'C004', code: 'UNITINS', name: 'United Insurance Corp', type: 'Insurance', email: 'claims@unitedins.com', phone: '555-0300', address: '789 Finance Blvd', city: 'Capital City', creditLimit: 100000, isActive: true, createdAt: '2024-02-01' },
-  { id: 'C005', code: 'DRSMITH', name: "Dr. Smith's Family Practice", type: 'Institution', email: 'drsmith@familypractice.com', phone: '555-0400', creditLimit: 10000, isActive: true, createdAt: '2024-02-15' },
+  { id: 'C001', code: 'WALKIN', name: 'Walk-in Patient', type: 'B2C', isActive: true, createdAt: '2024-01-01' },
+  { id: 'C006', code: 'HOMEVISIT', name: 'Home Visit', type: 'B2C', isActive: true, createdAt: '2024-01-01' },
+  { id: 'C002', code: 'CITYHSP', name: 'City General Hospital', type: 'B2B', email: 'lab@cityhospital.com', phone: '555-0100', address: '123 Medical Center Dr', city: 'Metro City', creditLimit: 50000, priceListId: 'PL002', isActive: true, createdAt: '2024-01-01' },
+  { id: 'C003', code: 'WELLNESS', name: 'Wellness Medical Clinic', type: 'B2B', email: 'info@wellnessmc.com', phone: '555-0200', address: '456 Health Ave', city: 'Metro City', creditLimit: 25000, priceListId: 'PL003', isActive: true, createdAt: '2024-01-15' },
+  { id: 'C004', code: 'UNITINS', name: 'United Insurance Corp', type: 'B2B', email: 'claims@unitedins.com', phone: '555-0300', address: '789 Finance Blvd', city: 'Capital City', creditLimit: 100000, priceListId: 'PL004', isActive: true, createdAt: '2024-02-01' },
+  { id: 'C005', code: 'DRSMITH', name: "Dr. Smith's Family Practice", type: 'B2B', email: 'drsmith@familypractice.com', phone: '555-0400', creditLimit: 10000, isActive: true, createdAt: '2024-02-15' },
 ];
 
 // Mock Price Lists
@@ -95,40 +96,28 @@ export const mockPriceLists: PriceList[] = [
 
 // Mock Normal Ranges
 export const mockNormalRanges: NormalRange[] = [
-  // Hemoglobin
   { id: 'NR001', serviceId: 'S002', gender: 'Male', ageMin: 18, ageUnit: 'years', normalLow: 13.5, normalHigh: 17.5, criticalLow: 7, criticalHigh: 20, unit: 'g/dL' },
   { id: 'NR002', serviceId: 'S002', gender: 'Female', ageMin: 18, ageUnit: 'years', normalLow: 12.0, normalHigh: 16.0, criticalLow: 7, criticalHigh: 20, unit: 'g/dL' },
-  // WBC
   { id: 'NR003', serviceId: 'S003', gender: 'All', normalLow: 4.5, normalHigh: 11.0, criticalLow: 2, criticalHigh: 30, unit: 'x10³/µL' },
-  // Platelet
   { id: 'NR004', serviceId: 'S004', gender: 'All', normalLow: 150, normalHigh: 400, criticalLow: 50, criticalHigh: 1000, unit: 'x10³/µL' },
-  // RBC
   { id: 'NR005', serviceId: 'S005', gender: 'Male', normalLow: 4.5, normalHigh: 5.5, unit: 'x10⁶/µL' },
   { id: 'NR006', serviceId: 'S005', gender: 'Female', normalLow: 4.0, normalHigh: 5.0, unit: 'x10⁶/µL' },
-  // Glucose
   { id: 'NR010', serviceId: 'S010', gender: 'All', normalLow: 70, normalHigh: 100, criticalLow: 40, criticalHigh: 500, unit: 'mg/dL' },
   { id: 'NR011', serviceId: 'S011', gender: 'All', normalLow: 70, normalHigh: 140, criticalLow: 40, criticalHigh: 500, unit: 'mg/dL' },
-  // HbA1c
   { id: 'NR012', serviceId: 'S012', gender: 'All', normalLow: 4.0, normalHigh: 5.6, unit: '%' },
-  // Urea
   { id: 'NR013', serviceId: 'S013', gender: 'All', normalLow: 7, normalHigh: 20, unit: 'mg/dL' },
-  // Creatinine
   { id: 'NR014', serviceId: 'S014', gender: 'Male', normalLow: 0.7, normalHigh: 1.3, criticalHigh: 10, unit: 'mg/dL' },
   { id: 'NR015', serviceId: 'S014', gender: 'Female', normalLow: 0.6, normalHigh: 1.1, criticalHigh: 10, unit: 'mg/dL' },
-  // Liver enzymes
   { id: 'NR020', serviceId: 'S020', gender: 'All', normalLow: 7, normalHigh: 56, unit: 'U/L' },
   { id: 'NR021', serviceId: 'S021', gender: 'All', normalLow: 10, normalHigh: 40, unit: 'U/L' },
   { id: 'NR022', serviceId: 'S022', gender: 'All', normalLow: 44, normalHigh: 147, unit: 'U/L' },
-  // Bilirubin
   { id: 'NR023', serviceId: 'S023', gender: 'All', normalLow: 0.1, normalHigh: 1.2, criticalHigh: 15, unit: 'mg/dL' },
   { id: 'NR024', serviceId: 'S024', gender: 'All', normalLow: 0.0, normalHigh: 0.3, unit: 'mg/dL' },
-  // Lipids
   { id: 'NR030', serviceId: 'S030', gender: 'All', normalLow: 0, normalHigh: 200, unit: 'mg/dL' },
   { id: 'NR031', serviceId: 'S031', gender: 'All', normalLow: 0, normalHigh: 150, unit: 'mg/dL' },
   { id: 'NR032', serviceId: 'S032', gender: 'Male', normalLow: 40, normalHigh: 999, unit: 'mg/dL' },
   { id: 'NR033', serviceId: 'S032', gender: 'Female', normalLow: 50, normalHigh: 999, unit: 'mg/dL' },
   { id: 'NR034', serviceId: 'S033', gender: 'All', normalLow: 0, normalHigh: 100, unit: 'mg/dL' },
-  // Thyroid
   { id: 'NR040', serviceId: 'S040', gender: 'All', normalLow: 0.4, normalHigh: 4.0, criticalLow: 0.1, criticalHigh: 10, unit: 'mIU/L' },
   { id: 'NR041', serviceId: 'S041', gender: 'All', normalLow: 80, normalHigh: 200, unit: 'ng/dL' },
   { id: 'NR042', serviceId: 'S042', gender: 'All', normalLow: 5.0, normalHigh: 12.0, unit: 'µg/dL' },
@@ -158,12 +147,13 @@ export const mockCases: Case[] = [
     totalAmount: 150,
     paymentStatus: 'paid',
     paidAmount: 150,
+    paymentRequired: true,
     samples: [
       { id: 'SM001', tubeId: 'ED1A2B3C4D', sampleType: 'EDTA Blood', status: 'completed', collectedAt: '2024-02-01T08:30:00', testIds: ['S002', 'S003'] }
     ],
     tests: [
-      { testId: 'S002', testCode: 'HGB', testName: 'Hemoglobin', department: 'Hematology', sampleType: 'EDTA Blood', price: 50, status: 'completed', result: '14.5', unit: 'g/dL', flag: 'normal', normalRange: '13.5-17.5' },
-      { testId: 'S003', testCode: 'WBC', testName: 'White Blood Cell Count', department: 'Hematology', sampleType: 'EDTA Blood', price: 50, status: 'completed', result: '7.2', unit: 'x10³/µL', flag: 'normal', normalRange: '4.5-11.0' },
+      { testId: 'S002', testCode: 'HGB', testName: 'Hemoglobin', department: 'Hematology', sampleType: 'EDTA Blood', price: 50, status: 'completed', result: '14.5', unit: 'g/dL', flag: 'normal', normalRange: '13.5-17.5', tubeId: 'ED1A2B3C4D' },
+      { testId: 'S003', testCode: 'WBC', testName: 'White Blood Cell Count', department: 'Hematology', sampleType: 'EDTA Blood', price: 50, status: 'completed', result: '7.2', unit: 'x10³/µL', flag: 'normal', normalRange: '4.5-11.0', tubeId: 'ED1A2B3C4D' },
     ]
   },
   {
@@ -187,107 +177,14 @@ export const mockCases: Case[] = [
     totalAmount: 252,
     paymentStatus: 'pending',
     paidAmount: 0,
+    paymentRequired: false,
     samples: [
       { id: 'SM002', tubeId: 'SR5E6F7G8H', sampleType: 'Serum', status: 'processing', collectedAt: '2024-02-01T10:00:00', testIds: ['S020', 'S021', 'S023'] }
     ],
     tests: [
-      { testId: 'S020', testCode: 'ALT', testName: 'Alanine Aminotransferase', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'completed', result: '85', unit: 'U/L', flag: 'abnormal', normalRange: '7-56' },
-      { testId: 'S021', testCode: 'AST', testName: 'Aspartate Aminotransferase', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'completed', result: '62', unit: 'U/L', flag: 'abnormal', normalRange: '10-40' },
-      { testId: 'S023', testCode: 'TBIL', testName: 'Total Bilirubin', department: 'Biochemistry', sampleType: 'Serum', price: 80, status: 'processing' },
-    ]
-  },
-  {
-    id: 'CS003',
-    caseNumber: 'LAB-2024-00003',
-    patientName: 'Michael Chen',
-    patientId: 'PAT003',
-    patientAge: 58,
-    patientGender: 'Male',
-    patientPhone: '555-3456',
-    clientId: 'C003',
-    clientName: 'Wellness Medical Clinic',
-    status: 'received',
-    priority: 'stat',
-    registeredDate: '2024-02-01T11:00:00',
-    collectionDate: '2024-02-01T11:30:00',
-    receivedDate: '2024-02-01T11:45:00',
-    subtotal: 610,
-    discountPercent: 15,
-    discountAmount: 91.5,
-    totalAmount: 518.5,
-    paymentStatus: 'partial',
-    paidAmount: 200,
-    samples: [
-      { id: 'SM003', tubeId: 'SR9I0J1K2L', sampleType: 'Serum', status: 'received', collectedAt: '2024-02-01T11:30:00', testIds: ['S010', 'S030', 'S031'] },
-      { id: 'SM004', tubeId: 'ED3M4N5O6P', sampleType: 'EDTA Blood', status: 'received', collectedAt: '2024-02-01T11:30:00', testIds: ['S012'] }
-    ],
-    tests: [
-      { testId: 'S010', testCode: 'GLU', testName: 'Glucose Fasting', department: 'Biochemistry', sampleType: 'Serum', price: 60, status: 'pending' },
-      { testId: 'S012', testCode: 'HBA1C', testName: 'Glycated Hemoglobin', department: 'Biochemistry', sampleType: 'EDTA Blood', price: 350, status: 'pending' },
-      { testId: 'S030', testCode: 'CHOL', testName: 'Total Cholesterol', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'pending' },
-      { testId: 'S031', testCode: 'TG', testName: 'Triglycerides', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'pending' },
-    ]
-  },
-  {
-    id: 'CS004',
-    caseNumber: 'LAB-2024-00004',
-    patientName: 'Emma Thompson',
-    patientId: 'PAT004',
-    patientAge: 28,
-    patientGender: 'Female',
-    patientPhone: '555-4567',
-    clientId: 'C001',
-    clientName: 'Walk-in Patient',
-    status: 'reported',
-    priority: 'routine',
-    registeredDate: '2024-01-31T13:30:00',
-    collectionDate: '2024-01-31T14:00:00',
-    receivedDate: '2024-01-31T14:30:00',
-    completedDate: '2024-01-31T17:00:00',
-    reportedDate: '2024-01-31T17:30:00',
-    subtotal: 650,
-    discountPercent: 0,
-    discountAmount: 0,
-    totalAmount: 650,
-    paymentStatus: 'paid',
-    paidAmount: 650,
-    samples: [
-      { id: 'SM005', tubeId: 'SR7Q8R9S0T', sampleType: 'Serum', status: 'completed', collectedAt: '2024-01-31T14:00:00', testIds: ['S040', 'S041', 'S042'] }
-    ],
-    tests: [
-      { testId: 'S040', testCode: 'TSH', testName: 'Thyroid Stimulating Hormone', department: 'Immunology', sampleType: 'Serum', price: 250, status: 'validated', result: '2.8', unit: 'mIU/L', flag: 'normal', normalRange: '0.4-4.0', validatedBy: 'Dr. Sarah Johnson', validatedAt: '2024-01-31T17:00:00' },
-      { testId: 'S041', testCode: 'T3', testName: 'Triiodothyronine', department: 'Immunology', sampleType: 'Serum', price: 200, status: 'validated', result: '125', unit: 'ng/dL', flag: 'normal', normalRange: '80-200', validatedBy: 'Dr. Sarah Johnson', validatedAt: '2024-01-31T17:00:00' },
-      { testId: 'S042', testCode: 'T4', testName: 'Thyroxine', department: 'Immunology', sampleType: 'Serum', price: 200, status: 'validated', result: '7.5', unit: 'µg/dL', flag: 'normal', normalRange: '5.0-12.0', validatedBy: 'Dr. Sarah Johnson', validatedAt: '2024-01-31T17:00:00' },
-    ]
-  },
-  {
-    id: 'CS005',
-    caseNumber: 'LAB-2024-00005',
-    patientName: 'Robert Garcia',
-    patientId: 'PAT005',
-    patientAge: 65,
-    patientGender: 'Male',
-    patientPhone: '555-5678',
-    clientId: 'C004',
-    clientName: 'United Insurance Corp',
-    status: 'in-process',
-    priority: 'routine',
-    registeredDate: '2024-02-01T08:30:00',
-    collectionDate: '2024-02-01T09:00:00',
-    receivedDate: '2024-02-01T09:30:00',
-    subtotal: 240,
-    discountPercent: 20,
-    discountAmount: 48,
-    totalAmount: 192,
-    paymentStatus: 'pending',
-    paidAmount: 0,
-    samples: [
-      { id: 'SM006', tubeId: 'SR1U2V3W4X', sampleType: 'Serum', status: 'processing', collectedAt: '2024-02-01T09:00:00', testIds: ['S013', 'S014', 'S015'] }
-    ],
-    tests: [
-      { testId: 'S013', testCode: 'UREA', testName: 'Blood Urea Nitrogen', department: 'Biochemistry', sampleType: 'Serum', price: 70, status: 'completed', result: '28', unit: 'mg/dL', flag: 'abnormal', normalRange: '7-20' },
-      { testId: 'S014', testCode: 'CREAT', testName: 'Creatinine', department: 'Biochemistry', sampleType: 'Serum', price: 80, status: 'completed', result: '1.8', unit: 'mg/dL', flag: 'abnormal', normalRange: '0.7-1.3' },
-      { testId: 'S015', testCode: 'URIC', testName: 'Uric Acid', department: 'Biochemistry', sampleType: 'Serum', price: 90, status: 'processing' },
+      { testId: 'S020', testCode: 'ALT', testName: 'Alanine Aminotransferase', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'completed', result: '85', unit: 'U/L', flag: 'abnormal', normalRange: '7-56', tubeId: 'SR5E6F7G8H' },
+      { testId: 'S021', testCode: 'AST', testName: 'Aspartate Aminotransferase', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'completed', result: '62', unit: 'U/L', flag: 'abnormal', normalRange: '10-40', tubeId: 'SR5E6F7G8H' },
+      { testId: 'S023', testCode: 'TBIL', testName: 'Total Bilirubin', department: 'Biochemistry', sampleType: 'Serum', price: 80, status: 'processing', tubeId: 'SR5E6F7G8H' },
     ]
   },
   {
@@ -309,6 +206,7 @@ export const mockCases: Case[] = [
     totalAmount: 350,
     paymentStatus: 'paid',
     paidAmount: 350,
+    paymentRequired: true,
     samples: [],
     tests: [
       { testId: 'S030', testCode: 'CHOL', testName: 'Total Cholesterol', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'pending' },
