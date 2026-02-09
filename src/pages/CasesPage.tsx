@@ -65,8 +65,17 @@ export default function CasesPage() {
   const [validationOpen, setValidationOpen] = useState(false);
   const [reportPreviewOpen, setReportPreviewOpen] = useState(false);
 
+  // Normalize cases to ensure arrays exist
+  const normalizedCases = useMemo(() => {
+    return cases.map(c => ({
+      ...c,
+      tests: c.tests || [],
+      samples: c.samples || [],
+    }));
+  }, [cases]);
+
   const filteredCases = useMemo(() => {
-    return cases.filter(caseItem => {
+    return normalizedCases.filter(caseItem => {
       const matchesSearch = 
         caseItem.caseNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         caseItem.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -77,7 +86,7 @@ export default function CasesPage() {
 
       return matchesSearch && matchesStatus && matchesPriority;
     });
-  }, [cases, searchQuery, statusFilter, priorityFilter]);
+  }, [normalizedCases, searchQuery, statusFilter, priorityFilter]);
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this case?')) {
@@ -150,14 +159,14 @@ export default function CasesPage() {
 
   // Statistics
   const stats = useMemo(() => ({
-    total: cases.length,
-    registered: cases.filter(c => c.status === 'registered').length,
-    sampleCollected: cases.filter(c => c.status === 'sample-collected').length,
-    received: cases.filter(c => c.status === 'received').length,
-    inProcess: cases.filter(c => c.status === 'in-process').length,
-    completed: cases.filter(c => c.status === 'completed').length,
-    urgentStat: cases.filter(c => c.priority !== 'routine').length,
-  }), [cases]);
+    total: normalizedCases.length,
+    registered: normalizedCases.filter(c => c.status === 'registered').length,
+    sampleCollected: normalizedCases.filter(c => c.status === 'sample-collected').length,
+    received: normalizedCases.filter(c => c.status === 'received').length,
+    inProcess: normalizedCases.filter(c => c.status === 'in-process').length,
+    completed: normalizedCases.filter(c => c.status === 'completed').length,
+    urgentStat: normalizedCases.filter(c => c.priority !== 'routine').length,
+  }), [normalizedCases]);
 
   return (
     <MainLayout title="Cases / Worklist">
