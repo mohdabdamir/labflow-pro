@@ -1,7 +1,7 @@
 // Local storage hooks for LIS data persistence
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Case, Service, Profile, Client, Package, PriceList, NormalRange } from '@/types/lab';
+import type { Case, Service, Profile, Client, Package, PriceList, NormalRange, Patient } from '@/types/lab';
 import { 
   mockCases, 
   mockServices, 
@@ -124,6 +124,40 @@ export function useClients() {
   }, [clients]);
 
   return { clients, addClient, updateClient, deleteClient, getClientById, setClients };
+}
+
+// Patients Hook (new - for patient storage & auto-load)
+export function usePatients() {
+  const [patients, setPatients] = useLocalStorage<Patient>('lis_patients', []);
+
+  const addPatient = useCallback((patient: Patient) => {
+    setPatients(prev => {
+      const existing = prev.findIndex(p => p.id === patient.id);
+      if (existing >= 0) {
+        return prev.map((p, i) => i === existing ? { ...p, ...patient } : p);
+      }
+      return [...prev, patient];
+    });
+  }, [setPatients]);
+
+  const updatePatient = useCallback((id: string, updates: Partial<Patient>) => {
+    setPatients(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  }, [setPatients]);
+
+  const getPatientById = useCallback((id: string) => {
+    return patients.find(p => p.id === id);
+  }, [patients]);
+
+  const searchPatients = useCallback((query: string) => {
+    const q = query.toLowerCase();
+    return patients.filter(p => 
+      p.id.toLowerCase().includes(q) || 
+      p.name.toLowerCase().includes(q) ||
+      (p.phone && p.phone.includes(q))
+    );
+  }, [patients]);
+
+  return { patients, addPatient, updatePatient, getPatientById, searchPatients, setPatients };
 }
 
 // Packages Hook
