@@ -13,14 +13,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { 
-  Plus, Search, MoreHorizontal, Edit, Trash2, Building2, User, Home
+  Plus, Search, MoreHorizontal, Edit, Trash2, Building2, User, Home, X, Stethoscope
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useClients } from '@/hooks/useLabData';
-import type { Client, ClientType } from '@/types/lab';
+import type { Client, ClientType, Physician } from '@/types/lab';
 import { generateId } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +49,11 @@ export default function ClientsPage() {
     address: '',
     city: '',
     creditLimit: 0,
+    physicians: [] as Physician[],
   });
+
+  // Physician form
+  const [newPhysician, setNewPhysician] = useState({ name: '', specialization: '', phone: '' });
 
   const filteredClients = useMemo(() => {
     return clients.filter(client => {
@@ -64,25 +70,39 @@ export default function ClientsPage() {
     if (client) {
       setEditingClient(client);
       setFormData({
-        code: client.code,
-        name: client.name,
-        type: client.type,
-        email: client.email || '',
-        phone: client.phone || '',
-        address: client.address || '',
-        city: client.city || '',
+        code: client.code, name: client.name, type: client.type,
+        email: client.email || '', phone: client.phone || '',
+        address: client.address || '', city: client.city || '',
         creditLimit: client.creditLimit || 0,
+        physicians: client.physicians || [],
       });
     } else {
       setEditingClient(null);
-      setFormData({ code: '', name: '', type: 'B2B', email: '', phone: '', address: '', city: '', creditLimit: 0 });
+      setFormData({ code: '', name: '', type: 'B2B', email: '', phone: '', address: '', city: '', creditLimit: 0, physicians: [] });
     }
+    setNewPhysician({ name: '', specialization: '', phone: '' });
     setDialogOpen(true);
+  };
+
+  const handleAddPhysician = () => {
+    if (!newPhysician.name.trim()) return;
+    const ph: Physician = {
+      id: generateId('PH'),
+      name: newPhysician.name.trim(),
+      specialization: newPhysician.specialization.trim() || undefined,
+      phone: newPhysician.phone.trim() || undefined,
+    };
+    setFormData(prev => ({ ...prev, physicians: [...prev.physicians, ph] }));
+    setNewPhysician({ name: '', specialization: '', phone: '' });
+  };
+
+  const handleRemovePhysician = (id: string) => {
+    setFormData(prev => ({ ...prev, physicians: prev.physicians.filter(p => p.id !== id) }));
   };
 
   const handleSave = () => {
     if (editingClient) {
-      updateClient(editingClient.id, formData);
+      updateClient(editingClient.id, { ...formData });
     } else {
       const newClient: Client = {
         id: generateId('C'),
@@ -136,7 +156,7 @@ export default function ClientsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Code</TableHead><TableHead>Name</TableHead><TableHead>Type</TableHead>
-                  <TableHead>Contact</TableHead><TableHead>Location</TableHead>
+                  <TableHead>Physicians</TableHead><TableHead>Contact</TableHead>
                   <TableHead className="text-right">Credit Limit</TableHead><TableHead>Status</TableHead>
                   <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
@@ -154,12 +174,18 @@ export default function ClientsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className={cn(
-                          'inline-flex items-center px-2 py-0.5 text-xs font-medium rounded',
-                          client.type === 'B2C' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                        )}>
+                        <span className={cn('inline-flex items-center px-2 py-0.5 text-xs font-medium rounded',
+                          client.type === 'B2C' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400')}>
                           {client.type}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        {client.physicians && client.physicians.length > 0 ? (
+                          <div className="flex items-center gap-1">
+                            <Stethoscope className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{client.physicians.length}</span>
+                          </div>
+                        ) : <span className="text-muted-foreground text-sm">—</span>}
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
@@ -168,10 +194,9 @@ export default function ClientsPage() {
                           {!client.email && !client.phone && <span className="text-muted-foreground">-</span>}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">{client.city || client.address || '-'}</TableCell>
                       <TableCell className="text-right font-medium">{client.creditLimit ? `$${client.creditLimit.toLocaleString()}` : '-'}</TableCell>
                       <TableCell>
-                        <span className={`text-xs font-medium ${client.isActive ? 'text-status-completed' : 'text-muted-foreground'}`}>
+                        <span className={`text-xs font-medium ${client.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
                           {client.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </TableCell>
@@ -196,7 +221,7 @@ export default function ClientsPage() {
         </Card>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editingClient ? 'Edit Client' : 'Add New Client'}</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -224,6 +249,49 @@ export default function ClientsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label htmlFor="city">City</Label><Input id="city" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} /></div>
                 <div className="space-y-2"><Label htmlFor="creditLimit">Credit Limit ($)</Label><Input id="creditLimit" type="number" value={formData.creditLimit} onChange={(e) => setFormData({ ...formData, creditLimit: parseInt(e.target.value) || 0 })} /></div>
+              </div>
+
+              <Separator />
+
+              {/* Physicians Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Stethoscope className="h-4 w-4 text-primary" />
+                  <Label className="text-base font-semibold">Physicians</Label>
+                </div>
+
+                {formData.physicians.length > 0 && (
+                  <div className="space-y-2">
+                    {formData.physicians.map(ph => (
+                      <div key={ph.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Stethoscope className="h-3.5 w-3.5 text-muted-foreground" />
+                          <div>
+                            <span className="font-medium text-sm">{ph.name}</span>
+                            {ph.specialization && <span className="text-xs text-muted-foreground ml-2">{ph.specialization}</span>}
+                            {ph.phone && <span className="text-xs text-muted-foreground ml-2">📞 {ph.phone}</span>}
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemovePhysician(ph.id)}><X className="h-3 w-3" /></Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-3 gap-2">
+                  <Input placeholder="Physician name *" value={newPhysician.name}
+                    onChange={(e) => setNewPhysician({ ...newPhysician, name: e.target.value })}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddPhysician()} />
+                  <Input placeholder="Specialization" value={newPhysician.specialization}
+                    onChange={(e) => setNewPhysician({ ...newPhysician, specialization: e.target.value })} />
+                  <div className="flex gap-2">
+                    <Input placeholder="Phone" value={newPhysician.phone}
+                      onChange={(e) => setNewPhysician({ ...newPhysician, phone: e.target.value })} />
+                    <Button variant="secondary" size="icon" className="shrink-0" onClick={handleAddPhysician} disabled={!newPhysician.name.trim()}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
             <DialogFooter>
