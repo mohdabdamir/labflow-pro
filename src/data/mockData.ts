@@ -1,15 +1,8 @@
 // Laboratory Information System - Mock Data
 
 import type { 
-  Case, 
-  Service, 
-  Profile, 
-  Client, 
-  NormalRange,
-  Package,
-  PriceList,
-  User,
-  Sample
+  Case, Service, Profile, Client, NormalRange,
+  Package, PriceList, User, Sample, CaseType, VATConfig
 } from '@/types/lab';
 
 // Mock Users
@@ -18,6 +11,25 @@ export const mockUsers: User[] = [
   { id: 'U002', username: 'tech1', fullName: 'John Smith', role: 'technician', department: 'Hematology', isActive: true },
   { id: 'U003', username: 'path1', fullName: 'Dr. Sarah Johnson', role: 'pathologist', isActive: true },
   { id: 'U004', username: 'recep1', fullName: 'Mary Williams', role: 'receptionist', isActive: true },
+  { id: 'U005', username: 'tech2', fullName: 'Ahmed Al-Rashid', role: 'technician', department: 'Biochemistry', isActive: true },
+  { id: 'U006', username: 'path2', fullName: 'Dr. Fatima Hassan', role: 'pathologist', isActive: true },
+  { id: 'U007', username: 'meddir', fullName: 'Dr. Mohammed Al-Khalil', role: 'medical_director', isActive: true },
+  { id: 'U008', username: 'tech3', fullName: 'Sara Ahmed', role: 'technician', department: 'Immunology', isActive: true },
+];
+
+// Mock Case Types
+export const mockCaseTypes: CaseType[] = [
+  { id: 'CT001', code: 'CP', name: 'Clinical Pathology', reportTitle: 'Clinical Pathology Report', isActive: true },
+  { id: 'CT002', code: 'MB', name: 'Microbiology', reportTitle: 'Microbiology Report', isActive: true },
+  { id: 'CT003', code: 'NBS', name: 'Newborn Screening', reportTitle: 'Newborn Screening Report', isActive: true },
+  { id: 'CT004', code: 'HP', name: 'Histopathology', reportTitle: 'Histopathology Report', isActive: true },
+  { id: 'CT005', code: 'CYT', name: 'Cytology', reportTitle: 'Cytology Report', isActive: true },
+  { id: 'CT006', code: 'CUST', name: 'Custom', reportTitle: 'Laboratory Report', isActive: true },
+];
+
+// Mock VAT Config
+export const mockVATConfig: VATConfig[] = [
+  { id: 'VAT001', percentage: 15, isActive: true },
 ];
 
 // Mock Services (Tests)
@@ -28,14 +40,12 @@ export const mockServices: Service[] = [
   { id: 'S004', code: 'PLT', name: 'Platelet Count', department: 'Hematology', unit: 'x10³/µL', sampleType: 'EDTA Blood', turnaroundTime: 1, price: 50, isActive: true, reportOrder: 4 },
   { id: 'S005', code: 'RBC', name: 'Red Blood Cell Count', department: 'Hematology', unit: 'x10⁶/µL', sampleType: 'EDTA Blood', turnaroundTime: 1, price: 50, isActive: true, reportOrder: 5 },
   { id: 'S006', code: 'HCT', name: 'Hematocrit', department: 'Hematology', unit: '%', sampleType: 'EDTA Blood', turnaroundTime: 1, price: 40, isActive: true, reportOrder: 6 },
-  
   { id: 'S010', code: 'GLU', name: 'Glucose Fasting', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 2, price: 60, isActive: true, reportOrder: 10 },
   { id: 'S011', code: 'GLUR', name: 'Glucose Random', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 2, price: 60, isActive: true, reportOrder: 11 },
   { id: 'S012', code: 'HBA1C', name: 'Glycated Hemoglobin', department: 'Biochemistry', unit: '%', sampleType: 'EDTA Blood', turnaroundTime: 4, price: 350, isActive: true, reportOrder: 12 },
   { id: 'S013', code: 'UREA', name: 'Blood Urea Nitrogen', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 2, price: 70, isActive: true, reportOrder: 13 },
   { id: 'S014', code: 'CREAT', name: 'Creatinine', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 2, price: 80, isActive: true, reportOrder: 14 },
   { id: 'S015', code: 'URIC', name: 'Uric Acid', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 2, price: 90, isActive: true, reportOrder: 15 },
-  
   { id: 'S020', code: 'ALT', name: 'Alanine Aminotransferase', shortName: 'SGPT', department: 'Biochemistry', unit: 'U/L', sampleType: 'Serum', turnaroundTime: 2, price: 100, isActive: true, reportOrder: 20 },
   { id: 'S021', code: 'AST', name: 'Aspartate Aminotransferase', shortName: 'SGOT', department: 'Biochemistry', unit: 'U/L', sampleType: 'Serum', turnaroundTime: 2, price: 100, isActive: true, reportOrder: 21 },
   { id: 'S022', code: 'ALP', name: 'Alkaline Phosphatase', department: 'Biochemistry', unit: 'U/L', sampleType: 'Serum', turnaroundTime: 2, price: 100, isActive: true, reportOrder: 22 },
@@ -43,18 +53,15 @@ export const mockServices: Service[] = [
   { id: 'S024', code: 'DBIL', name: 'Direct Bilirubin', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 2, price: 80, isActive: true, reportOrder: 24 },
   { id: 'S025', code: 'TP', name: 'Total Protein', department: 'Biochemistry', unit: 'g/dL', sampleType: 'Serum', turnaroundTime: 2, price: 70, isActive: true, reportOrder: 25 },
   { id: 'S026', code: 'ALB', name: 'Albumin', department: 'Biochemistry', unit: 'g/dL', sampleType: 'Serum', turnaroundTime: 2, price: 70, isActive: true, reportOrder: 26 },
-  
   { id: 'S030', code: 'CHOL', name: 'Total Cholesterol', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 3, price: 100, isActive: true, reportOrder: 30 },
   { id: 'S031', code: 'TG', name: 'Triglycerides', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 3, price: 100, isActive: true, reportOrder: 31 },
   { id: 'S032', code: 'HDL', name: 'HDL Cholesterol', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 3, price: 120, isActive: true, reportOrder: 32 },
   { id: 'S033', code: 'LDL', name: 'LDL Cholesterol', department: 'Biochemistry', unit: 'mg/dL', sampleType: 'Serum', turnaroundTime: 3, price: 120, isActive: true, reportOrder: 33 },
-  
   { id: 'S040', code: 'TSH', name: 'Thyroid Stimulating Hormone', department: 'Immunology', unit: 'mIU/L', sampleType: 'Serum', turnaroundTime: 4, price: 250, isActive: true, reportOrder: 40 },
   { id: 'S041', code: 'T3', name: 'Triiodothyronine', department: 'Immunology', unit: 'ng/dL', sampleType: 'Serum', turnaroundTime: 4, price: 200, isActive: true, reportOrder: 41 },
   { id: 'S042', code: 'T4', name: 'Thyroxine', department: 'Immunology', unit: 'µg/dL', sampleType: 'Serum', turnaroundTime: 4, price: 200, isActive: true, reportOrder: 42 },
   { id: 'S043', code: 'FT3', name: 'Free T3', department: 'Immunology', unit: 'pg/mL', sampleType: 'Serum', turnaroundTime: 4, price: 280, isActive: true, reportOrder: 43 },
   { id: 'S044', code: 'FT4', name: 'Free T4', department: 'Immunology', unit: 'ng/dL', sampleType: 'Serum', turnaroundTime: 4, price: 280, isActive: true, reportOrder: 44 },
-  
   { id: 'S050', code: 'URINE', name: 'Urinalysis Complete', department: 'Urinalysis', unit: '', sampleType: 'Urine', turnaroundTime: 2, price: 100, isActive: true, reportOrder: 50 },
 ];
 
@@ -76,14 +83,41 @@ export const mockPackages: Package[] = [
   { id: 'PK003', code: 'CARDIAC', name: 'Cardiac Risk Profile', profiles: ['P004'], tests: ['S010', 'S012'], price: 600, validFrom: '2024-01-01', isActive: true },
 ];
 
-// Mock Clients - updated with B2C/B2B types
+// Mock Clients with physicians
 export const mockClients: Client[] = [
   { id: 'C001', code: 'WALKIN', name: 'Walk-in Patient', type: 'B2C', isActive: true, createdAt: '2024-01-01' },
   { id: 'C006', code: 'HOMEVISIT', name: 'Home Visit', type: 'B2C', isActive: true, createdAt: '2024-01-01' },
-  { id: 'C002', code: 'CITYHSP', name: 'City General Hospital', type: 'B2B', email: 'lab@cityhospital.com', phone: '555-0100', address: '123 Medical Center Dr', city: 'Metro City', creditLimit: 50000, priceListId: 'PL002', isActive: true, createdAt: '2024-01-01' },
-  { id: 'C003', code: 'WELLNESS', name: 'Wellness Medical Clinic', type: 'B2B', email: 'info@wellnessmc.com', phone: '555-0200', address: '456 Health Ave', city: 'Metro City', creditLimit: 25000, priceListId: 'PL003', isActive: true, createdAt: '2024-01-15' },
-  { id: 'C004', code: 'UNITINS', name: 'United Insurance Corp', type: 'B2B', email: 'claims@unitedins.com', phone: '555-0300', address: '789 Finance Blvd', city: 'Capital City', creditLimit: 100000, priceListId: 'PL004', isActive: true, createdAt: '2024-02-01' },
-  { id: 'C005', code: 'DRSMITH', name: "Dr. Smith's Family Practice", type: 'B2B', email: 'drsmith@familypractice.com', phone: '555-0400', creditLimit: 10000, isActive: true, createdAt: '2024-02-15' },
+  { 
+    id: 'C002', code: 'CITYHSP', name: 'City General Hospital', type: 'B2B',
+    email: 'lab@cityhospital.com', phone: '555-0100', address: '123 Medical Center Dr', city: 'Metro City',
+    creditLimit: 50000, priceListId: 'PL002', isActive: true, createdAt: '2024-01-01',
+    physicians: [
+      { id: 'PH001', name: 'Dr. Ahmed Al-Mansoor', specialization: 'Internal Medicine', phone: '555-0101' },
+      { id: 'PH002', name: 'Dr. Fatima Noor', specialization: 'Pediatrics', phone: '555-0102' },
+      { id: 'PH003', name: 'Dr. Khalid Ibrahim', specialization: 'Cardiology', phone: '555-0103' },
+    ],
+  },
+  { 
+    id: 'C003', code: 'WELLNESS', name: 'Wellness Medical Clinic', type: 'B2B',
+    email: 'info@wellnessmc.com', phone: '555-0200', address: '456 Health Ave', city: 'Metro City',
+    creditLimit: 25000, priceListId: 'PL003', isActive: true, createdAt: '2024-01-15',
+    physicians: [
+      { id: 'PH004', name: 'Dr. Hassan Ali', specialization: 'General Practice', phone: '555-0201' },
+      { id: 'PH005', name: 'Dr. Layla Mahmoud', specialization: 'Dermatology', phone: '555-0202' },
+    ],
+  },
+  { 
+    id: 'C004', code: 'UNITINS', name: 'United Insurance Corp', type: 'B2B',
+    email: 'claims@unitedins.com', phone: '555-0300', address: '789 Finance Blvd', city: 'Capital City',
+    creditLimit: 100000, priceListId: 'PL004', isActive: true, createdAt: '2024-02-01',
+  },
+  { 
+    id: 'C005', code: 'DRSMITH', name: "Dr. Smith's Family Practice", type: 'B2B',
+    email: 'drsmith@familypractice.com', phone: '555-0400', creditLimit: 10000, isActive: true, createdAt: '2024-02-15',
+    physicians: [
+      { id: 'PH006', name: 'Dr. James Smith', specialization: 'Family Medicine', phone: '555-0401' },
+    ],
+  },
 ];
 
 // Mock Price Lists
@@ -126,28 +160,14 @@ export const mockNormalRanges: NormalRange[] = [
 // Mock Cases with updated structure
 export const mockCases: Case[] = [
   {
-    id: 'CS001',
-    caseNumber: 'LAB-2024-00001',
-    patientName: 'John Anderson',
-    patientId: 'PAT001',
-    patientAge: 45,
-    patientGender: 'Male',
-    patientPhone: '555-1234',
-    clientId: 'C001',
-    clientName: 'Walk-in Patient',
-    status: 'completed',
-    priority: 'routine',
-    registeredDate: '2024-02-01T08:00:00',
-    collectionDate: '2024-02-01T08:30:00',
-    receivedDate: '2024-02-01T09:00:00',
-    completedDate: '2024-02-01T11:00:00',
-    subtotal: 150,
-    discountPercent: 0,
-    discountAmount: 0,
-    totalAmount: 150,
-    paymentStatus: 'paid',
-    paidAmount: 150,
-    paymentRequired: true,
+    id: 'CS001', caseNumber: 'LAB-2024-00001', patientName: 'John Anderson', patientId: 'PAT001',
+    patientAge: 45, patientGender: 'Male', patientPhone: '555-1234',
+    clientId: 'C001', clientName: 'Walk-in Patient', status: 'completed', priority: 'routine',
+    registeredDate: '2024-02-01T08:00:00', collectionDate: '2024-02-01T08:30:00',
+    receivedDate: '2024-02-01T09:00:00', completedDate: '2024-02-01T11:00:00',
+    subtotal: 150, discountPercent: 0, discountAmount: 0, vatPercent: 15, vatAmount: 22.5,
+    totalAmount: 172.5, patientTotal: 172.5, insuranceTotal: 0,
+    paymentStatus: 'paid', paidAmount: 172.5, paymentRequired: true,
     samples: [
       { id: 'SM001', tubeId: 'ED1A2B3C4D', sampleType: 'EDTA Blood', status: 'completed', collectedAt: '2024-02-01T08:30:00', testIds: ['S002', 'S003'] }
     ],
@@ -157,27 +177,13 @@ export const mockCases: Case[] = [
     ]
   },
   {
-    id: 'CS002',
-    caseNumber: 'LAB-2024-00002',
-    patientName: 'Sarah Mitchell',
-    patientId: 'PAT002',
-    patientAge: 32,
-    patientGender: 'Female',
-    patientPhone: '555-2345',
-    clientId: 'C002',
-    clientName: 'City General Hospital',
-    status: 'in-process',
-    priority: 'urgent',
-    registeredDate: '2024-02-01T09:30:00',
-    collectionDate: '2024-02-01T10:00:00',
-    receivedDate: '2024-02-01T10:30:00',
-    subtotal: 280,
-    discountPercent: 10,
-    discountAmount: 28,
-    totalAmount: 252,
-    paymentStatus: 'pending',
-    paidAmount: 0,
-    paymentRequired: false,
+    id: 'CS002', caseNumber: 'LAB-2024-00002', patientName: 'Sarah Mitchell', patientId: 'PAT002',
+    patientAge: 32, patientGender: 'Female', patientPhone: '555-2345',
+    clientId: 'C002', clientName: 'City General Hospital', status: 'in-process', priority: 'urgent',
+    registeredDate: '2024-02-01T09:30:00', collectionDate: '2024-02-01T10:00:00', receivedDate: '2024-02-01T10:30:00',
+    subtotal: 280, discountPercent: 10, discountAmount: 28, vatPercent: 15, vatAmount: 37.8,
+    totalAmount: 289.8, patientTotal: 0, insuranceTotal: 289.8,
+    paymentStatus: 'pending', paidAmount: 0, paymentRequired: false,
     samples: [
       { id: 'SM002', tubeId: 'SR5E6F7G8H', sampleType: 'Serum', status: 'processing', collectedAt: '2024-02-01T10:00:00', testIds: ['S020', 'S021', 'S023'] }
     ],
@@ -188,25 +194,13 @@ export const mockCases: Case[] = [
     ]
   },
   {
-    id: 'CS006',
-    caseNumber: 'LAB-2024-00006',
-    patientName: 'Lisa Wong',
-    patientId: 'PAT006',
-    patientAge: 42,
-    patientGender: 'Female',
-    patientPhone: '555-6789',
-    clientId: 'C001',
-    clientName: 'Walk-in Patient',
-    status: 'registered',
-    priority: 'routine',
+    id: 'CS006', caseNumber: 'LAB-2024-00006', patientName: 'Lisa Wong', patientId: 'PAT006',
+    patientAge: 42, patientGender: 'Female', patientPhone: '555-6789',
+    clientId: 'C001', clientName: 'Walk-in Patient', status: 'registered', priority: 'routine',
     registeredDate: '2024-02-01T12:00:00',
-    subtotal: 350,
-    discountPercent: 0,
-    discountAmount: 0,
-    totalAmount: 350,
-    paymentStatus: 'paid',
-    paidAmount: 350,
-    paymentRequired: true,
+    subtotal: 350, discountPercent: 0, discountAmount: 0, vatPercent: 15, vatAmount: 52.5,
+    totalAmount: 402.5, patientTotal: 402.5, insuranceTotal: 0,
+    paymentStatus: 'paid', paidAmount: 402.5, paymentRequired: true,
     samples: [],
     tests: [
       { testId: 'S030', testCode: 'CHOL', testName: 'Total Cholesterol', department: 'Biochemistry', sampleType: 'Serum', price: 100, status: 'pending' },
@@ -217,19 +211,17 @@ export const mockCases: Case[] = [
   },
 ];
 
-// Helper function to generate unique IDs
+// Helper functions
 export const generateId = (prefix: string): string => {
   return `${prefix}${Date.now().toString(36)}${Math.random().toString(36).substr(2, 5)}`.toUpperCase();
 };
 
-// Helper function to generate case numbers
 export const generateCaseNumber = (): string => {
   const year = new Date().getFullYear();
   const random = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
   return `LAB-${year}-${random}`;
 };
 
-// Helper function to generate patient ID
 export const generatePatientId = (): string => {
   return `PAT${Date.now().toString(36).toUpperCase()}`;
 };

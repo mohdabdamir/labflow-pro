@@ -1,6 +1,6 @@
 // Laboratory Information System - Core Type Definitions
 
-// Case/Sample Status - now includes 'registered' for cases before sample collection
+// Case/Sample Status
 export type CaseStatus = 'registered' | 'sample-collected' | 'received' | 'in-process' | 'completed' | 'reported';
 
 // Test Result Flags
@@ -33,17 +33,51 @@ export type SampleType = 'EDTA Blood' | 'Serum' | 'Plasma' | 'Urine' | 'Stool' |
 // Sample/Tube status
 export type SampleStatus = 'pending' | 'collected' | 'received' | 'processing' | 'completed';
 
+// Payment method
+export type PaymentMethod = 'cash' | 'benefitpay' | 'card';
+
+// Payment entry for multi-method payments
+export interface PaymentEntry {
+  method: PaymentMethod;
+  amount: number;
+  reference?: string;
+}
+
+// Physician registered under a client
+export interface Physician {
+  id: string;
+  name: string;
+  specialization?: string;
+  phone?: string;
+}
+
+// Case Type (report header titles)
+export interface CaseType {
+  id: string;
+  code: string;
+  name: string;
+  reportTitle: string;
+  isActive: boolean;
+}
+
+// VAT Configuration
+export interface VATConfig {
+  id: string;
+  percentage: number;
+  isActive: boolean;
+}
+
 // Sample/Tube Record
 export interface Sample {
   id: string;
-  tubeId: string; // Barcode ID for interfacing
+  tubeId: string;
   sampleType: SampleType;
   status: SampleStatus;
   collectedAt?: string;
   collectedBy?: string;
   receivedAt?: string;
   receivedBy?: string;
-  testIds: string[]; // Tests associated with this sample
+  testIds: string[];
   notes?: string;
 }
 
@@ -59,10 +93,18 @@ export interface Case {
   patientPhone?: string;
   patientEmail?: string;
   patientAddress?: string;
+  patientMrno?: string;
   referringDoctor?: string;
   clinicalNotes?: string;
   clientId: string;
   clientName: string;
+  physicianId?: string;
+  physicianName?: string;
+  pathologistId?: string;
+  pathologistName?: string;
+  technicianId?: string;
+  technicianName?: string;
+  caseTypeId?: string;
   status: CaseStatus;
   priority: 'routine' | 'urgent' | 'stat';
   registeredDate: string;
@@ -72,21 +114,26 @@ export interface Case {
   reportedDate?: string;
   tests: CaseTest[];
   samples: Sample[];
-  // Track which profiles/packages were ordered
   orderedProfileIds?: string[];
   orderedPackageIds?: string[];
   // Billing
   subtotal: number;
   discountPercent: number;
   discountAmount: number;
+  vatPercent: number;
+  vatAmount: number;
   totalAmount: number;
+  patientTotal: number;
+  insuranceTotal: number;
   paymentStatus: 'pending' | 'partial' | 'paid';
   paidAmount: number;
-  paymentRequired: boolean; // true for B2C (walk-in, home visit)
+  paymentRequired: boolean;
+  paymentEntries?: PaymentEntry[];
+  discountComment?: string;
   notes?: string;
 }
 
-// Test within a case
+// Test within a case - with per-test billing
 export interface CaseTest {
   testId: string;
   testCode: string;
@@ -104,10 +151,21 @@ export interface CaseTest {
   validatedBy?: string;
   validatedAt?: string;
   validationNotes?: string;
-  tubeId?: string; // Assigned tube ID
-  profileId?: string; // If part of a profile
-  profileName?: string; // Profile name for display
-  packageId?: string; // If part of a package
+  tubeId?: string;
+  profileId?: string;
+  profileName?: string;
+  packageId?: string;
+  // Per-test billing
+  discountPercent?: number;
+  discountAmount?: number;
+  insured?: boolean;
+  insuranceDiscountPercent?: number;
+  copayPercent?: number;
+  patientAmount?: number;
+  insuranceAmount?: number;
+  vatPercent?: number;
+  patientVat?: number;
+  insuranceVat?: number;
 }
 
 // Service/Test Master
@@ -119,7 +177,7 @@ export interface Service {
   department: Department;
   unit: string;
   sampleType: string;
-  turnaroundTime: number; // in hours
+  turnaroundTime: number;
   price: number;
   isActive: boolean;
   analyzerCode?: string;
@@ -133,7 +191,7 @@ export interface Profile {
   name: string;
   description?: string;
   department: Department;
-  tests: string[]; // Service IDs
+  tests: string[];
   price: number;
   isActive: boolean;
 }
@@ -144,8 +202,8 @@ export interface Package {
   code: string;
   name: string;
   description?: string;
-  profiles: string[]; // Profile IDs
-  tests: string[]; // Individual Service IDs
+  profiles: string[];
+  tests: string[];
   price: number;
   validFrom: string;
   validTo?: string;
@@ -165,14 +223,19 @@ export interface Client {
   priceListId?: string;
   billingTerms?: string;
   creditLimit?: number;
+  physicians?: Physician[];
   isActive: boolean;
   createdAt: string;
 }
 
-// Patient Record (stored separately for reuse)
+// Patient Record
 export interface Patient {
   id: string;
-  name: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  name: string; // full name for display
+  mrno?: string;
   gender: Gender;
   dob?: string;
   age?: number;
@@ -225,7 +288,7 @@ export interface User {
   id: string;
   username: string;
   fullName: string;
-  role: 'admin' | 'technician' | 'pathologist' | 'receptionist' | 'billing';
+  role: 'admin' | 'technician' | 'pathologist' | 'medical_director' | 'receptionist' | 'billing';
   department?: Department;
   isActive: boolean;
 }
@@ -249,5 +312,5 @@ export interface DashboardStats {
   inProcessCases: number;
   completedCases: number;
   urgentCases: number;
-  averageTAT: number; // in hours
+  averageTAT: number;
 }

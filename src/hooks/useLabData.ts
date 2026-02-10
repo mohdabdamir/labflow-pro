@@ -1,15 +1,11 @@
 // Local storage hooks for LIS data persistence
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Case, Service, Profile, Client, Package, PriceList, NormalRange, Patient } from '@/types/lab';
+import type { Case, Service, Profile, Client, Package, PriceList, NormalRange, Patient, User, CaseType, VATConfig } from '@/types/lab';
 import { 
-  mockCases, 
-  mockServices, 
-  mockProfiles, 
-  mockClients, 
-  mockPackages, 
-  mockPriceLists,
-  mockNormalRanges 
+  mockCases, mockServices, mockProfiles, mockClients, 
+  mockPackages, mockPriceLists, mockNormalRanges, mockUsers,
+  mockCaseTypes, mockVATConfig
 } from '@/data/mockData';
 
 // Generic hook for localStorage with initial data
@@ -126,7 +122,7 @@ export function useClients() {
   return { clients, addClient, updateClient, deleteClient, getClientById, setClients };
 }
 
-// Patients Hook (new - for patient storage & auto-load)
+// Patients Hook
 export function usePatients() {
   const [patients, setPatients] = useLocalStorage<Patient>('lis_patients', []);
 
@@ -148,16 +144,21 @@ export function usePatients() {
     return patients.find(p => p.id === id);
   }, [patients]);
 
+  const getPatientByMrno = useCallback((mrno: string) => {
+    return patients.find(p => p.mrno === mrno);
+  }, [patients]);
+
   const searchPatients = useCallback((query: string) => {
     const q = query.toLowerCase();
     return patients.filter(p => 
       p.id.toLowerCase().includes(q) || 
       p.name.toLowerCase().includes(q) ||
+      (p.mrno && p.mrno.toLowerCase().includes(q)) ||
       (p.phone && p.phone.includes(q))
     );
   }, [patients]);
 
-  return { patients, addPatient, updatePatient, getPatientById, searchPatients, setPatients };
+  return { patients, addPatient, updatePatient, getPatientById, getPatientByMrno, searchPatients, setPatients };
 }
 
 // Packages Hook
@@ -219,4 +220,62 @@ export function useNormalRanges() {
   }, [normalRanges]);
 
   return { normalRanges, addNormalRange, updateNormalRange, deleteNormalRange, getRangesForService, setNormalRanges };
+}
+
+// Users Hook
+export function useUsers() {
+  const [users, setUsers] = useLocalStorage<User>('lis_users', mockUsers);
+
+  const addUser = useCallback((user: User) => {
+    setUsers(prev => [...prev, user]);
+  }, [setUsers]);
+
+  const updateUser = useCallback((id: string, updates: Partial<User>) => {
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
+  }, [setUsers]);
+
+  const getPathologists = useCallback(() => {
+    return users.filter(u => (u.role === 'pathologist' || u.role === 'medical_director') && u.isActive);
+  }, [users]);
+
+  const getTechnicians = useCallback(() => {
+    return users.filter(u => u.role === 'technician' && u.isActive);
+  }, [users]);
+
+  return { users, addUser, updateUser, getPathologists, getTechnicians, setUsers };
+}
+
+// Case Types Hook
+export function useCaseTypes() {
+  const [caseTypes, setCaseTypes] = useLocalStorage<CaseType>('lis_casetypes', mockCaseTypes);
+
+  const addCaseType = useCallback((ct: CaseType) => {
+    setCaseTypes(prev => [...prev, ct]);
+  }, [setCaseTypes]);
+
+  const updateCaseType = useCallback((id: string, updates: Partial<CaseType>) => {
+    setCaseTypes(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+  }, [setCaseTypes]);
+
+  const deleteCaseType = useCallback((id: string) => {
+    setCaseTypes(prev => prev.filter(c => c.id !== id));
+  }, [setCaseTypes]);
+
+  return { caseTypes, addCaseType, updateCaseType, deleteCaseType, setCaseTypes };
+}
+
+// VAT Config Hook
+export function useVATConfig() {
+  const [vatConfigs, setVATConfigs] = useLocalStorage<VATConfig>('lis_vatconfig', mockVATConfig);
+
+  const getActiveVAT = useCallback(() => {
+    const active = vatConfigs.find(v => v.isActive);
+    return active?.percentage || 0;
+  }, [vatConfigs]);
+
+  const updateVAT = useCallback((percentage: number) => {
+    setVATConfigs(prev => prev.map(v => ({ ...v, percentage })));
+  }, [setVATConfigs]);
+
+  return { vatConfigs, getActiveVAT, updateVAT, setVATConfigs };
 }
