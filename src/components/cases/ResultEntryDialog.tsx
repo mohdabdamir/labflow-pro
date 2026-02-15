@@ -99,10 +99,10 @@ export function ResultEntryDialog({ open, onClose, caseData, onSave, mode }: Res
     return (
       <>
         {Array.from(profileGroups.entries()).map(([profileId, { name, tests: profileTests }]) => (
-          <div key={profileId} className="space-y-2">
-            <div className="flex items-center gap-2 mt-3">
-              <Badge className="bg-blue-500/20 text-blue-700 dark:text-blue-300 border-0 text-xs">Profile</Badge>
-              <span className="text-sm font-semibold text-primary">{name}</span>
+          <div key={profileId}>
+            <div className="flex items-center gap-2 py-1 px-2 bg-primary/5 rounded-sm">
+              <Badge className="bg-primary/15 text-primary border-0 text-[10px] h-4 px-1.5">Profile</Badge>
+              <span className="text-xs font-semibold text-primary">{name}</span>
             </div>
             {profileTests.map(test => renderTestRow(test))}
           </div>
@@ -114,60 +114,51 @@ export function ResultEntryDialog({ open, onClose, caseData, onSave, mode }: Res
 
   const renderTestRow = (test: CaseTest) => {
     const resultData = getResultData(test.testId);
+    const isCritical = resultData.isCritical;
+    const isAbnormal = resultData.flag === 'abnormal' && !isCritical;
+
     return (
-      <Card
+      <div
         key={test.testId}
         className={cn(
-          'transition-all',
-          resultData.isCritical && 'border-destructive bg-destructive/5',
-          resultData.flag === 'abnormal' && !resultData.isCritical && 'border-orange-400/50'
+          'grid grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_auto] gap-2 items-center px-2 py-1.5 rounded-sm transition-colors',
+          isCritical && 'bg-destructive/8 border-l-2 border-destructive',
+          isAbnormal && 'bg-orange-500/5 border-l-2 border-orange-400',
+          !isCritical && !isAbnormal && 'hover:bg-muted/50 border-l-2 border-transparent'
         )}
       >
-        <CardContent className="p-3">
-          <div className="grid grid-cols-12 gap-3 items-center">
-            {/* Test Info */}
-            <div className="col-span-4">
-              <div className="flex items-center gap-1.5">
-                <Badge variant="outline" className="text-[10px] font-mono">{test.testCode}</Badge>
-                {getFlagIcon(resultData.flag)}
-              </div>
-              <p className="font-medium text-sm mt-0.5">{test.testName}</p>
-            </div>
-            {/* Result Input */}
-            <div className="col-span-3">
-              <div className="flex items-center gap-1.5">
-                <Input
-                  value={resultData.result}
-                  onChange={(e) => updateResult(test.testId, e.target.value)}
-                  placeholder="Value"
-                  className={cn('font-mono h-8 text-sm', resultData.isCritical && 'border-destructive focus-visible:ring-destructive')}
-                  disabled={mode === 'validation' && test.status === 'validated'}
-                />
-                <span className="text-xs text-muted-foreground whitespace-nowrap">{test.unit}</span>
-              </div>
-            </div>
-            {/* Normal Range */}
-            <div className="col-span-3">
-              <p className="text-xs text-muted-foreground">Ref: {resultData.normalRange || 'N/A'}{test.unit ? ` ${test.unit}` : ''}</p>
-            </div>
-            {/* Flag */}
-            <div className="col-span-2 flex justify-end">
-              {getFlagBadge(resultData.flag)}
-            </div>
-          </div>
-          {resultData.isCritical && (
-            <div className="mt-2 p-1.5 bg-destructive/10 rounded flex items-center gap-1.5 text-xs text-destructive">
-              <AlertCircle className="h-3 w-3" />
-              Critical value - notify physician
-            </div>
-          )}
-          {mode === 'validation' && test.validatedBy && (
-            <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
-              <User className="h-3 w-3" /> Validated by {test.validatedBy}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* Test name + code */}
+        <div className="flex items-center gap-2 min-w-0">
+          {getFlagIcon(resultData.flag)}
+          <span className="text-sm font-medium truncate">{test.testName}</span>
+          <span className="text-[10px] font-mono text-muted-foreground shrink-0">{test.testCode}</span>
+        </div>
+
+        {/* Result input */}
+        <div className="flex items-center gap-1">
+          <Input
+            value={resultData.result}
+            onChange={(e) => updateResult(test.testId, e.target.value)}
+            placeholder="—"
+            className={cn(
+              'font-mono h-7 text-sm px-2',
+              isCritical && 'border-destructive focus-visible:ring-destructive'
+            )}
+            disabled={mode === 'validation' && test.status === 'validated'}
+          />
+          <span className="text-[10px] text-muted-foreground whitespace-nowrap w-10 text-right">{test.unit}</span>
+        </div>
+
+        {/* Reference range */}
+        <span className="text-[11px] text-muted-foreground truncate">
+          {resultData.normalRange || '—'}
+        </span>
+
+        {/* Flag badge */}
+        <div className="w-16 flex justify-end">
+          {getFlagBadge(resultData.flag)}
+        </div>
+      </div>
     );
   };
 
@@ -221,32 +212,34 @@ export function ResultEntryDialog({ open, onClose, caseData, onSave, mode }: Res
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6 py-4">
-          <div className="space-y-6">
-            {/* Validation mode: summary at top */}
+        <ScrollArea className="flex-1 px-4 py-3">
+          <div className="space-y-4">
+            {/* Validation mode: compact summary */}
             {mode === 'validation' && (
-              <Card className="bg-muted/50">
-                <CardContent className="p-4">
-                  <h4 className="font-semibold mb-2">Results Summary</h4>
-                  <div className="flex gap-4 text-sm">
-                    <span className="flex items-center gap-1">{getFlagIcon('normal')} Normal: {Array.from(results.values()).filter(r => r.flag === 'normal').length}</span>
-                    <span className="flex items-center gap-1">{getFlagIcon('abnormal')} Abnormal: {Array.from(results.values()).filter(r => r.flag === 'abnormal').length}</span>
-                    <span className="flex items-center gap-1">{getFlagIcon('critical')} Critical: {Array.from(results.values()).filter(r => r.isCritical).length}</span>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-center gap-4 px-2 py-2 bg-muted/50 rounded-md text-sm">
+                <span className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">Summary</span>
+                <span className="flex items-center gap-1">{getFlagIcon('normal')} {Array.from(results.values()).filter(r => r.flag === 'normal').length}</span>
+                <span className="flex items-center gap-1">{getFlagIcon('abnormal')} {Array.from(results.values()).filter(r => r.flag === 'abnormal').length}</span>
+                <span className="flex items-center gap-1">{getFlagIcon('critical')} {Array.from(results.values()).filter(r => r.isCritical).length}</span>
+              </div>
             )}
+
+            {/* Column headers */}
+            <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_auto] gap-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b pb-1">
+              <span>Test</span>
+              <span>Result</span>
+              <span>Reference</span>
+              <span className="w-16 text-right">Flag</span>
+            </div>
 
             {/* Tests grouped by tube */}
             {Array.from(tubeGroups.entries()).map(([tubeId, { sampleType, tests }]) => (
-              <div key={tubeId}>
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="outline" className="font-mono text-xs">{tubeId}</Badge>
-                  <span className="text-sm text-muted-foreground">{sampleType}</span>
+              <div key={tubeId} className="space-y-0.5">
+                <div className="flex items-center gap-2 px-2 py-1 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
+                  <Badge variant="outline" className="font-mono text-[10px] h-4 px-1.5">{tubeId}</Badge>
+                  <span className="text-xs text-muted-foreground">{sampleType}</span>
                 </div>
-                <div className="space-y-2">
-                  {renderTestsInTube(tests)}
-                </div>
+                {renderTestsInTube(tests)}
               </div>
             ))}
           </div>
@@ -301,9 +294,9 @@ function getFlagIcon(flag: ResultFlag) {
 
 function getFlagBadge(flag: ResultFlag) {
   switch (flag) {
-    case 'normal': return <Badge className="bg-status-completed/20 text-status-completed border-0 text-xs">Normal</Badge>;
-    case 'abnormal': return <Badge className="bg-orange-500/20 text-orange-600 dark:text-orange-400 border-0 text-xs">Abnormal</Badge>;
-    case 'critical': return <Badge className="bg-destructive/20 text-destructive border-0 text-xs">Critical</Badge>;
+    case 'normal': return <Badge className="bg-status-completed/20 text-status-completed border-0 text-[10px] h-5 px-1.5">N</Badge>;
+    case 'abnormal': return <Badge className="bg-orange-500/20 text-orange-600 dark:text-orange-400 border-0 text-[10px] h-5 px-1.5">Abn</Badge>;
+    case 'critical': return <Badge className="bg-destructive/20 text-destructive border-0 text-[10px] h-5 px-1.5">Crit</Badge>;
     default: return null;
   }
 }
