@@ -124,7 +124,20 @@ export function useClients() {
 
 // Patients Hook
 export function usePatients() {
-  const [patients, setPatients] = useLocalStorage<Patient>('lis_patients', []);
+  const [patients, setPatients] = useLocalStorage<Patient>('lis_patients', [
+    {
+      id: 'PAT001', firstName: 'John', middleName: 'William', lastName: 'Anderson',
+      name: 'John William Anderson', mrno: 'MR-10001', gender: 'Male',
+      dob: '1979-05-15', age: 45, ageInputMode: 'dob',
+      phone: '555-1234', email: 'john.anderson@email.com', createdAt: '2024-01-10',
+    },
+    {
+      id: 'PAT002', firstName: 'Sarah', lastName: 'Mitchell',
+      name: 'Sarah Mitchell', mrno: 'MR-10002', gender: 'Female',
+      dob: '1992-08-22', age: 32, ageInputMode: 'dob',
+      phone: '555-2345', email: 'sarah.m@email.com', createdAt: '2024-01-15',
+    },
+  ]);
 
   const addPatient = useCallback((patient: Patient) => {
     setPatients(prev => {
