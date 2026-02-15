@@ -334,7 +334,7 @@ export function CaseCreationWizard({ open, onClose, onSave }: CaseCreationWizard
 
   const canProceed = () => {
     switch (currentStep) {
-      case 'client': return !!selectedClientId;
+      case 'client': return !!selectedClientId && !!selectedPathologistId && !!selectedTechnicianId && (physicians.length === 0 || !!selectedPhysicianId);
       case 'patient': return patient.firstName.trim() && patient.lastName.trim() && patient.gender && (patient.ageInputMode === 'none' || patient.age);
       case 'tests': return allSelectedTests.length > 0;
       case 'tubes': return true;
@@ -503,17 +503,19 @@ export function CaseCreationWizard({ open, onClose, onSave }: CaseCreationWizard
                     <Label className="text-sm font-medium mb-2 block">Priority</Label>
                     <div className="flex gap-3">
                       {([
-                        { value: 'routine' as const, label: 'Routine', icon: <Clock className="h-4 w-4" />, color: 'border-muted-foreground/30 hover:border-primary' },
-                        { value: 'urgent' as const, label: 'Urgent', icon: <AlertTriangle className="h-4 w-4" />, color: 'border-orange-400 hover:border-orange-500' },
-                        { value: 'stat' as const, label: 'STAT', icon: <Zap className="h-4 w-4" />, color: 'border-destructive hover:border-destructive' },
+                        { value: 'routine' as const, label: 'Routine', icon: <Clock className="h-5 w-5" />,
+                          selectedBg: 'bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/30',
+                          unselectedBg: 'border-muted hover:border-emerald-400 text-muted-foreground' },
+                        { value: 'urgent' as const, label: 'Urgent', icon: <AlertTriangle className="h-5 w-5" />,
+                          selectedBg: 'bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/30',
+                          unselectedBg: 'border-muted hover:border-amber-400 text-muted-foreground' },
+                        { value: 'stat' as const, label: 'STAT', icon: <Zap className="h-5 w-5" />,
+                          selectedBg: 'bg-red-500/20 border-red-500 text-red-700 dark:text-red-300 ring-2 ring-red-500/30 animate-pulse',
+                          unselectedBg: 'border-muted hover:border-red-400 text-muted-foreground' },
                       ]).map(p => (
                         <button key={p.value} onClick={() => setPriority(p.value)}
-                          className={cn('flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all flex-1 justify-center font-medium',
-                            priority === p.value
-                              ? p.value === 'stat' ? 'bg-destructive/10 border-destructive text-destructive'
-                                : p.value === 'urgent' ? 'bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400'
-                                : 'bg-primary/10 border-primary text-primary'
-                              : `bg-card ${p.color} text-muted-foreground`
+                          className={cn('flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all flex-1 justify-center font-semibold text-base',
+                            priority === p.value ? p.selectedBg : `bg-card ${p.unselectedBg}`
                           )}>
                           {p.icon} {p.label}
                         </button>
@@ -523,90 +525,108 @@ export function CaseCreationWizard({ open, onClose, onSave }: CaseCreationWizard
 
                   <Separator />
 
-                  {/* Client search */}
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Select Client</Label>
-                    <div className="relative mb-3">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search clients..." value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} className="pl-10" />
-                    </div>
-                    <div className="grid gap-2 max-h-[240px] overflow-y-auto">
-                      {filteredClients.map(client => (
-                        <Card key={client.id} className={cn('cursor-pointer transition-all hover:border-primary/50', selectedClientId === client.id && 'border-primary bg-primary/5')}
-                          onClick={() => setSelectedClientId(client.id)}>
-                          <CardContent className="p-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className={cn('h-9 w-9 rounded-lg flex items-center justify-center', client.type === 'B2C' ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400')}>
-                                  {client.type === 'B2C' ? (client.code === 'HOMEVISIT' ? <Home className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />) : <Building className="h-4 w-4" />}
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{client.name}</span>
-                                    <Badge variant="outline" className="text-xs">{client.code}</Badge>
-                                    <Badge className={cn('text-xs', client.type === 'B2C' ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-0' : 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-0')}>{client.type}</Badge>
+                  {/* Client & Physician Group */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2"><Building className="h-4 w-4" /> Client & Referring Physician</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <Label className="text-sm font-medium mb-2 block">Select Client *</Label>
+                        <div className="relative mb-3">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder="Search clients..." value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} className="pl-10" />
+                        </div>
+                        <div className="grid gap-2 max-h-[200px] overflow-y-auto">
+                          {filteredClients.map(client => (
+                            <Card key={client.id} className={cn('cursor-pointer transition-all hover:border-primary/50', selectedClientId === client.id && 'border-primary bg-primary/5')}
+                              onClick={() => setSelectedClientId(client.id)}>
+                              <CardContent className="p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className={cn('h-9 w-9 rounded-lg flex items-center justify-center', client.type === 'B2C' ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400')}>
+                                      {client.type === 'B2C' ? (client.code === 'HOMEVISIT' ? <Home className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />) : <Building className="h-4 w-4" />}
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium">{client.name}</span>
+                                        <Badge variant="outline" className="text-xs">{client.code}</Badge>
+                                        <Badge className={cn('text-xs', client.type === 'B2C' ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-0' : 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-0')}>{client.type}</Badge>
+                                      </div>
+                                      {client.priceListId && <p className="text-xs text-primary mt-0.5">{priceLists.find(p => p.id === client.priceListId)?.name}</p>}
+                                      {client.physicians && client.physicians.length > 0 && <p className="text-xs text-muted-foreground mt-0.5">{client.physicians.length} physician(s)</p>}
+                                    </div>
                                   </div>
-                                  {client.priceListId && <p className="text-xs text-primary mt-0.5">{priceLists.find(p => p.id === client.priceListId)?.name}</p>}
-                                  {client.physicians && client.physicians.length > 0 && <p className="text-xs text-muted-foreground mt-0.5">{client.physicians.length} physician(s)</p>}
+                                  {selectedClientId === client.id && <Check className="h-5 w-5 text-primary" />}
                                 </div>
-                              </div>
-                              {selectedClientId === client.id && <Check className="h-5 w-5 text-primary" />}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+
+                      {selectedClient && (
+                        <>
+                          <div className="p-3 bg-muted rounded-lg text-sm">
+                            <span className="text-muted-foreground">Price scheme: </span>
+                            <span className="font-medium">{clientPriceList ? clientPriceList.name : 'Standard Pricing'}
+                              {clientPriceList && clientPriceList.discountPercent > 0 && <span className="text-primary ml-1">(-{clientPriceList.discountPercent}%)</span>}
+                            </span>
+                            {isB2C && <p className="text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Payment required at billing</p>}
+                          </div>
+
+                          {physicians.length > 0 && (
+                            <div>
+                              <Label className="text-sm font-medium mb-1 block flex items-center gap-1"><Stethoscope className="h-3.5 w-3.5" /> Referring Physician *</Label>
+                              <Select value={selectedPhysicianId} onValueChange={setSelectedPhysicianId}>
+                                <SelectTrigger><SelectValue placeholder="Select physician..." /></SelectTrigger>
+                                <SelectContent>
+                                  {physicians.map(ph => (
+                                    <SelectItem key={ph.id} value={ph.id}>
+                                      {ph.name}{ph.specialization ? ` — ${ph.specialization}` : ''}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Physician, Pathologist, Technician selections */}
-                  {selectedClient && (
-                    <div className="space-y-4">
-                      <div className="p-3 bg-muted rounded-lg text-sm">
-                        <span className="text-muted-foreground">Price scheme: </span>
-                        <span className="font-medium">{clientPriceList ? clientPriceList.name : 'Standard Pricing'}
-                          {clientPriceList && clientPriceList.discountPercent > 0 && <span className="text-primary ml-1">(-{clientPriceList.discountPercent}%)</span>}
-                        </span>
-                        {isB2C && <p className="text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Payment required at billing</p>}
-                      </div>
-
-                      {/* Physician */}
-                      {physicians.length > 0 && (
-                        <div>
-                          <Label className="text-sm font-medium mb-1 block flex items-center gap-1"><Stethoscope className="h-3.5 w-3.5" /> Referring Physician</Label>
-                          <Select value={selectedPhysicianId} onValueChange={setSelectedPhysicianId}>
-                            <SelectTrigger><SelectValue placeholder="Select physician..." /></SelectTrigger>
-                            <SelectContent>
-                              {physicians.map(ph => (
-                                <SelectItem key={ph.id} value={ph.id}>
-                                  {ph.name}{ph.specialization ? ` — ${ph.specialization}` : ''}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                          )}
+                          {physicians.length === 0 && (
+                            <p className="text-xs text-muted-foreground italic">No physicians registered for this client.</p>
+                          )}
+                        </>
                       )}
+                    </CardContent>
+                  </Card>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm font-medium mb-1 block">Pathologist</Label>
-                          <Select value={selectedPathologistId} onValueChange={setSelectedPathologistId}>
-                            <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                            <SelectContent>
-                              {pathologists.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                  {/* Pathologist & Lab Technologist Group */}
+                  {selectedClient && (
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2"><Shield className="h-4 w-4" /> Lab Staff Assignment</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-sm font-medium mb-1 block">Pathologist *</Label>
+                            <Select value={selectedPathologistId} onValueChange={setSelectedPathologistId}>
+                              <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                              <SelectContent>
+                                {pathologists.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium mb-1 block">Lab Technologist *</Label>
+                            <Select value={selectedTechnicianId} onValueChange={setSelectedTechnicianId}>
+                              <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                              <SelectContent>
+                                {technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.fullName}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
-                        <div>
-                          <Label className="text-sm font-medium mb-1 block">Lab Technologist</Label>
-                          <Select value={selectedTechnicianId} onValueChange={setSelectedTechnicianId}>
-                            <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                            <SelectContent>
-                              {technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.fullName}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               )}
@@ -619,7 +639,9 @@ export function CaseCreationWizard({ open, onClose, onSave }: CaseCreationWizard
                     <Label className="text-sm font-medium mb-2 block">Patient ID / MRNO</Label>
                     <div className="flex gap-2">
                       <Input value={patientIdSearch} onChange={(e) => setPatientIdSearch(e.target.value)}
-                        placeholder="Enter patient ID or MRNO to search..." onKeyDown={(e) => e.key === 'Enter' && handlePatientIdSearch()} />
+                        placeholder="Enter patient ID or MRNO to search..."
+                        onKeyDown={(e) => e.key === 'Enter' && handlePatientIdSearch()}
+                        onBlur={() => { if (patientIdSearch.trim()) handlePatientIdSearch(); }} />
                       <Button variant="secondary" onClick={handlePatientIdSearch}><Search className="h-4 w-4 mr-1" /> Lookup</Button>
                     </div>
                     {patient.isExisting && <p className="text-xs text-primary mt-1 flex items-center gap-1"><Check className="h-3 w-3" /> Existing patient loaded</p>}
