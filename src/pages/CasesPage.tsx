@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useCases } from '@/hooks/useLabData';
+import { useBilling } from '@/hooks/useBilling';
 import { 
   StatusBadge, PriorityIndicator, CaseCreationWizard,
   SampleCollectionDialog, ResultEntryDialog, CaseDetailDrawer
@@ -28,6 +29,7 @@ import { toast } from 'sonner';
 
 export default function CasesPage() {
   const { cases, addCase, updateCase, deleteCase } = useCases();
+  const { createInvoiceFromCase } = useBilling();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<CaseStatus | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'routine' | 'urgent' | 'stat'>('all');
@@ -62,7 +64,9 @@ export default function CasesPage() {
 
   const handleCaseCreated = (newCase: Case) => {
     addCase(newCase);
-    toast.success(`Case ${newCase.caseNumber} created`);
+    // Auto-generate tax invoice for B2C, or record for B2B
+    const invoice = createInvoiceFromCase(newCase);
+    toast.success(`Case ${newCase.caseNumber} created — Invoice ${invoice.invoiceNumber} generated`);
   };
 
   const handleSamplesCollected = (samples: Sample[]) => {

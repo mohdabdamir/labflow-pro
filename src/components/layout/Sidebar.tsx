@@ -14,6 +14,8 @@ import {
   FlaskConical,
   ChevronLeft,
   ChevronRight,
+  Receipt,
+  ClipboardList,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -37,8 +39,9 @@ const navItems: NavItem[] = [
   { label: 'Profiles', icon: Layers, href: '/profiles' },
   { label: 'Packages', icon: Package, href: '/packages' },
   { label: 'Clients', icon: Users, href: '/clients' },
-  { label: 'Price Lists', icon: DollarSign, href: '/pricelists' },
+  { label: 'Price Lists', icon: ClipboardList, href: '/pricelists' },
   { label: 'Normal Ranges', icon: Activity, href: '/normalranges' },
+  { label: 'Billing', icon: Receipt, href: '/billing' },
 ];
 
 const bottomItems: NavItem[] = [
