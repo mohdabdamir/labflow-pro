@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { 
   BillingTransaction, Invoice, InvoiceStatus, InvoiceLineItem, 
-  BillingAuditEntry, Currency 
+  BillingAuditEntry, Currency, InvoicePrefixConfig 
 } from '@/types/billing';
 import type { Case, CaseTest } from '@/types/lab';
 
@@ -82,6 +82,7 @@ export function useBilling() {
   const [transactions, setTransactions] = useLocalStorage<BillingTransaction>('lis_billing_transactions', []);
   const [invoices, setInvoices] = useLocalStorage<Invoice>('lis_invoices', []);
   const [auditLog, setAuditLog] = useLocalStorage<BillingAuditEntry>('lis_billing_audit', []);
+  const [prefixConfigs, setPrefixConfigs] = useLocalStorage<InvoicePrefixConfig>('lis_invoice_prefixes', []);
   const [invoiceSequence, setInvoiceSequence] = useState<number>(() => {
     try {
       const stored = localStorage.getItem('lis_invoice_seq');
@@ -322,6 +323,163 @@ export function useBilling() {
     );
   }, [transactions]);
 
+  // ── B2B Prefix Management ──
+
+  const savePrefixConfig = useCallback((config: InvoicePrefixConfig) => {
+    setPrefixConfigs(prev => {
+      const existing = prev.findIndex(p => p.id === config.id);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = config;
+        return updated;
+      }
+      return [...prev, config];
+    });
+  }, [setPrefixConfigs]);
+
+  // Generate B2B invoice number using client prefix
+  const generateB2BInvoiceNumber = useCallback((clientId: string): { invoiceNumber: string; prefixId: string | null } => {
+    const cfg = prefixConfigs.find(p => p.clientId === clientId);
+    if (cfg) {
+      const num = `${cfg.prefix}-${cfg.year}-${String(cfg.currentSequence).padStart(4, '0')}`;
+      // Increment sequence
+      setPrefixConfigs(prev => prev.map(p =>
+        p.id === cfg.id ? { ...p, currentSequence: p.currentSequence + 1 } : p
+      ));
+      return { invoiceNumber: num, prefixId: cfg.id };
+    }
+    // Fallback to standard numbering
+    const seq = invoiceSequence;
+    const num = generateInvoiceNumber(seq);
+    setInvoiceSequence(prev => prev + 1);
+    return { invoiceNumber: num, prefixId: null };
+  }, [prefixConfigs, invoiceSequence, setPrefixConfigs, setInvoiceSequence]);
+
+  // ── B2B Consolidated Invoice ──
+
+  const createConsolidatedInvoice = useCallback((params: {
+    clientId: string;
+    clientName: string;
+    casesData: Case[];
+    periodStart: string;
+    periodEnd: string;
+    remarks?: string;
+    createdBy?: string;
+  }): Invoice => {
+    const { clientId, clientName, casesData, periodStart, periodEnd, remarks, createdBy = 'System' } = params;
+    const now = new Date().toISOString();
+    const invoiceId = genId('INV');
+    const { invoiceNumber } = generateB2BInvoiceNumber(clientId);
+
+    // Aggregate all line items from all cases
+    const allLineItems: InvoiceLineItem[] = [];
+    const txnIds: string[] = [];
+
+    let grossAmount = 0;
+    let discountAmount = 0;
+    let vatAmount = 0;
+    let totalAmount = 0;
+    let patientTotal = 0;
+    let insuranceTotal = 0;
+
+    for (const caseData of casesData) {
+      const lineItems = buildLineItems(caseData.tests, caseData.vatPercent);
+      allLineItems.push(...lineItems);
+
+      grossAmount += caseData.subtotal;
+      discountAmount += caseData.discountAmount;
+      vatAmount += caseData.vatAmount;
+      totalAmount += caseData.totalAmount;
+      patientTotal += caseData.patientTotal;
+      insuranceTotal += caseData.insuranceTotal;
+
+      // Create a transaction per case for audit
+      const txnId = genId('TXN');
+      txnIds.push(txnId);
+
+      const transaction: BillingTransaction = {
+        id: txnId,
+        invoiceId,
+        caseId: caseData.id,
+        caseNumber: caseData.caseNumber,
+        patientName: caseData.patientName,
+        patientId: caseData.patientId,
+        clientId,
+        clientName,
+        clientType: 'B2B',
+        transactionType: 'case_creation',
+        description: `Consolidated: ${caseData.tests.length} test(s) from case ${caseData.caseNumber}`,
+        previousAmount: 0,
+        newAmount: caseData.totalAmount,
+        netAdjustment: caseData.totalAmount,
+        vatPercent: caseData.vatPercent,
+        vatAmount: caseData.vatAmount,
+        totalWithVat: caseData.totalAmount,
+        paymentStatus: 'pending',
+        createdBy,
+        createdAt: now,
+      };
+
+      setTransactions(prev => [...prev, transaction]);
+    }
+
+    const vatPercent = casesData.length > 0 ? casesData[0].vatPercent : 15;
+
+    const invoice: Invoice = {
+      id: invoiceId,
+      invoiceNumber,
+      clientId,
+      clientName,
+      clientType: 'B2B',
+      caseId: casesData.map(c => c.id).join(','), // Multiple cases
+      caseNumber: `${casesData.length} case(s)`,
+      grossAmount,
+      discountAmount,
+      additionalAmount: 0,
+      vatPercent,
+      vatAmount,
+      totalAmount,
+      currency: 'SAR',
+      patientTotal,
+      insuranceTotal,
+      paidAmount: 0,
+      paymentStatus: 'pending',
+      status: 'draft',
+      invoiceComment: remarks,
+      createdAt: now,
+      createdBy,
+      version: 1,
+      transactionIds: txnIds,
+      lineItems: allLineItems,
+      // Store period info in remarks for reference
+      verificationRemarks: `Period: ${periodStart} to ${periodEnd}`,
+    };
+
+    setInvoices(prev => [...prev, invoice]);
+
+    addAudit({
+      entityType: 'invoice',
+      entityId: invoiceId,
+      action: 'b2b_consolidated_created',
+      newState: JSON.stringify({ invoiceNumber, totalAmount, cases: casesData.length, period: `${periodStart} to ${periodEnd}` }),
+      userId: createdBy,
+      userName: createdBy,
+    });
+
+    return invoice;
+  }, [generateB2BInvoiceNumber, setTransactions, setInvoices, addAudit]);
+
+  // Get case IDs that are already in a B2B consolidated invoice
+  const consolidatedCaseIds = useMemo(() => {
+    const ids = new Set<string>();
+    invoices
+      .filter(inv => inv.clientType === 'B2B' && inv.status !== 'cancelled')
+      .forEach(inv => {
+        inv.caseId.split(',').forEach(id => ids.add(id.trim()));
+      });
+    return ids;
+  }, [invoices]);
+
   // Summary stats
   const billingStats = useMemo(() => {
     const active = invoices.filter(i => i.status !== 'cancelled');
@@ -346,12 +504,16 @@ export function useBilling() {
     invoices,
     auditLog,
     billingStats,
+    prefixConfigs,
+    consolidatedCaseIds,
     createInvoiceFromCase,
     createAdjustmentTransaction,
+    createConsolidatedInvoice,
     updateInvoiceStatus,
     cancelInvoice,
     getInvoiceByCase,
     getTransactionsForInvoice,
+    savePrefixConfig,
     setInvoices,
   };
 }

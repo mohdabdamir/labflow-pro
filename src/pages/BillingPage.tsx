@@ -24,9 +24,11 @@ import {
 import {
   Search, Filter, DollarSign, FileText, TrendingUp, AlertCircle,
   CheckCircle2, MoreHorizontal, Eye, Ban, ArrowUpCircle, Clock,
-  Receipt, BarChart3, Download,
+  Receipt, BarChart3, Download, Building2, Settings2,
 } from 'lucide-react';
 import { useBilling } from '@/hooks/useBilling';
+import { useCases, useClients } from '@/hooks/useLabData';
+import { B2BInvoiceDialog, PrefixConfigDialog } from '@/components/billing';
 import type { Invoice, InvoiceStatus, BillingTransaction } from '@/types/billing';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -54,7 +56,12 @@ export default function BillingPage() {
   const {
     invoices, transactions, auditLog, billingStats,
     updateInvoiceStatus, cancelInvoice, getTransactionsForInvoice,
+    prefixConfigs, consolidatedCaseIds, createConsolidatedInvoice, savePrefixConfig,
   } = useBilling();
+
+  const { cases } = useCases();
+  const { clients } = useClients();
+  const b2bClients = useMemo(() => clients.filter(c => c.type === 'B2B' && c.isActive), [clients]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all');
@@ -75,6 +82,9 @@ export default function BillingPage() {
   const [newStatus, setNewStatus] = useState<InvoiceStatus>('verified');
   const [statusRemarks, setStatusRemarks] = useState('');
 
+  // B2B dialogs
+  const [b2bDialogOpen, setB2BDialogOpen] = useState(false);
+  const [prefixDialogOpen, setPrefixDialogOpen] = useState(false);
   const filteredInvoices = useMemo(() => {
     return invoices.filter(inv => {
       const q = searchQuery.toLowerCase();
@@ -145,6 +155,29 @@ export default function BillingPage() {
     toast.success('Exported to CSV');
   };
 
+  const handleB2BGenerate = (params: {
+    clientId: string;
+    caseIds: string[];
+    periodStart: string;
+    periodEnd: string;
+    remarks?: string;
+  }) => {
+    const client = b2bClients.find(c => c.id === params.clientId);
+    if (!client) return;
+    const selectedCases = cases.filter(c => params.caseIds.includes(c.id));
+    if (selectedCases.length === 0) return;
+
+    createConsolidatedInvoice({
+      clientId: params.clientId,
+      clientName: client.name,
+      casesData: selectedCases,
+      periodStart: params.periodStart,
+      periodEnd: params.periodEnd,
+      remarks: params.remarks,
+    });
+    toast.success(`Consolidated invoice created for ${client.name} with ${selectedCases.length} case(s)`);
+  };
+
   const selectedTransactions = selectedInvoice
     ? getTransactionsForInvoice(selectedInvoice.id)
     : [];
@@ -206,7 +239,15 @@ export default function BillingPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" onClick={exportToCSV}><Download className="h-4 w-4 mr-2" /> Export CSV</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setPrefixDialogOpen(true)}>
+              <Settings2 className="h-4 w-4 mr-2" /> Prefixes
+            </Button>
+            <Button variant="outline" onClick={() => setB2BDialogOpen(true)}>
+              <Building2 className="h-4 w-4 mr-2" /> B2B Invoice
+            </Button>
+            <Button variant="outline" onClick={exportToCSV}><Download className="h-4 w-4 mr-2" /> Export CSV</Button>
+          </div>
         </div>
 
         {/* Invoice Grid */}
@@ -477,6 +518,26 @@ export default function BillingPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* B2B Invoice Dialog */}
+      <B2BInvoiceDialog
+        open={b2bDialogOpen}
+        onOpenChange={setB2BDialogOpen}
+        b2bClients={b2bClients}
+        cases={cases}
+        existingInvoiceCaseIds={consolidatedCaseIds}
+        prefixConfigs={prefixConfigs}
+        onGenerateInvoice={handleB2BGenerate}
+      />
+
+      {/* Prefix Config Dialog */}
+      <PrefixConfigDialog
+        open={prefixDialogOpen}
+        onOpenChange={setPrefixDialogOpen}
+        b2bClients={b2bClients}
+        prefixConfigs={prefixConfigs}
+        onSaveConfig={savePrefixConfig}
+      />
     </MainLayout>
   );
 }
