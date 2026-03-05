@@ -291,6 +291,12 @@ export interface User {
   role: 'admin' | 'technician' | 'pathologist' | 'medical_director' | 'receptionist' | 'billing';
   department?: Department;
   isActive: boolean;
+  // Extended profile fields
+  email?: string;
+  phone?: string;
+  jobTitle?: string;
+  // Granular per-module permission overrides (empty = inherit from role defaults)
+  permissions?: Partial<Record<string, string[]>>;
 }
 
 // Audit Log Entry
