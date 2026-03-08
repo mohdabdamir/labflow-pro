@@ -97,7 +97,7 @@ export default function Dashboard() {
                   })}
                 </p>
               </div>
-              <Link to="/cases">
+              <Link to="/lab/cases">
                 <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
                   <FileText className="mr-2 h-4 w-4" />
                   New Case
@@ -132,7 +132,7 @@ export default function Dashboard() {
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Recent Cases</CardTitle>
-              <Link to="/cases">
+              <Link to="/lab/cases">
                 <Button variant="ghost" size="sm">
                   View All
                   <TrendingUp className="ml-2 h-4 w-4" />
@@ -195,19 +195,19 @@ export default function Dashboard() {
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Link to="/cases" className="block">
+                <Link to="/lab/cases" className="block">
                   <Button variant="outline" className="w-full justify-start">
                     <FileText className="mr-2 h-4 w-4" />
                     Create New Case
                   </Button>
                 </Link>
-                <Link to="/services" className="block">
+                <Link to="/lab/services" className="block">
                   <Button variant="outline" className="w-full justify-start">
                     <TestTubes className="mr-2 h-4 w-4" />
                     Manage Services
                   </Button>
                 </Link>
-                <Link to="/clients" className="block">
+                <Link to="/lab/clients" className="block">
                   <Button variant="outline" className="w-full justify-start">
                     <Users className="mr-2 h-4 w-4" />
                     Manage Clients
