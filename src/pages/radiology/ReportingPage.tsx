@@ -5,19 +5,20 @@ import type { RadiologyReport, ReportStatus, RADSScore } from '@/types/radiology
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   FileText, CheckCircle2, AlertTriangle, Pen, Clock, History,
-  Copy, Printer, ChevronDown, Eye, Save, Send, Star, X,
+  Copy, Printer, Save, Star, Download, Eye, X,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
+import { ReportImageManager } from '@/components/reports/ReportImageManager';
+import { RadiologyReportViewer, RadiologyReportDownload } from '@/components/reports/RadiologyReportPDF';
+import type { ReportImage } from '@/components/reports/RadiologyReportPDF';
 
 const STATUS_COLORS: Record<ReportStatus, string> = {
   Draft: 'bg-muted text-muted-foreground',
@@ -44,10 +45,12 @@ export default function ReportingPage() {
     versions: [],
   });
 
+  const [images, setImages] = useState<ReportImage[]>([]);
   const [selectedRads, setSelectedRads] = useState<string>('');
   const [radsScore, setRadsScore] = useState<number>(0);
   const [radsDialogOpen, setRadsDialogOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [signed, setSigned] = useState(!!report.signedBy);
 
   const relevantTemplates = REPORT_TEMPLATES.filter(t =>
@@ -96,12 +99,11 @@ export default function ReportingPage() {
 
   return (
     <div className="h-[calc(100vh-56px)] flex overflow-hidden">
-      {/* Left: Patient Context */}
+      {/* ── Left: Patient Context ── */}
       <div className="w-64 shrink-0 bg-card border-r border-border flex flex-col overflow-y-auto scrollbar-thin">
         <div className="px-4 py-3 border-b border-border">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Patient Context</p>
         </div>
-        {/* Patient info */}
         <div className="px-4 py-3 border-b border-border space-y-1">
           <p className="font-semibold text-sm">{study.patient.fullName}</p>
           <p className="text-xs text-muted-foreground">{study.patient.mrn} · {study.patient.age}y {study.patient.gender}</p>
@@ -115,7 +117,6 @@ export default function ReportingPage() {
             </div>
           )}
         </div>
-        {/* Study info */}
         <div className="px-4 py-3 border-b border-border space-y-1.5">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase">Current Study</p>
           <p className="text-xs font-medium">{study.description}</p>
@@ -123,18 +124,15 @@ export default function ReportingPage() {
           <p className="text-xs text-muted-foreground">{study.studyDate} {study.studyTime}</p>
           <Badge className="text-[10px]" variant="outline">{study.modality}</Badge>
         </div>
-        {/* Clinical indication */}
         <div className="px-4 py-3 border-b border-border">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1">Clinical Indication</p>
           <p className="text-xs text-foreground leading-relaxed">{study.clinicalHistory}</p>
         </div>
-        {/* Ordering physician */}
         <div className="px-4 py-3 border-b border-border">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1">Ordering Physician</p>
           <p className="text-xs font-medium">{study.orderingPhysician}</p>
           <p className="text-xs text-muted-foreground">{study.referringDepartment}</p>
         </div>
-        {/* Prior studies */}
         {study.hasPriors && (
           <div className="px-4 py-3">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">Prior Studies</p>
@@ -158,9 +156,9 @@ export default function ReportingPage() {
         )}
       </div>
 
-      {/* Main: Report editor */}
+      {/* ── Main: Report Editor ── */}
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
-        {/* Report header */}
+        {/* Report header toolbar */}
         <div className="shrink-0 px-6 py-3 border-b border-border bg-card flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
@@ -183,9 +181,20 @@ export default function ReportingPage() {
             <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={copyToClipboard}>
               <Copy className="h-3.5 w-3.5" />Copy
             </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
+            {/* Preview PDF */}
+            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setPdfPreviewOpen(true)}>
+              <Eye className="h-3.5 w-3.5" />Preview PDF
+            </Button>
+            {/* Print via PDF */}
+            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setPdfPreviewOpen(true)}>
               <Printer className="h-3.5 w-3.5" />Print
             </Button>
+            {/* Download PDF */}
+            <RadiologyReportDownload study={study} report={report} images={images}>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                <Download className="h-3.5 w-3.5" />Export PDF
+              </Button>
+            </RadiologyReportDownload>
             <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => save()}>
               <Save className="h-3.5 w-3.5" />Save Draft
             </Button>
@@ -224,7 +233,7 @@ export default function ReportingPage() {
             </div>
           </div>
 
-          {/* Report form */}
+          {/* Patient & Study card */}
           <Card>
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm">Patient & Study Information</CardTitle>
@@ -239,6 +248,7 @@ export default function ReportingPage() {
             </CardContent>
           </Card>
 
+          {/* Findings */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground">FINDINGS</label>
             <Textarea
@@ -250,6 +260,7 @@ export default function ReportingPage() {
             />
           </div>
 
+          {/* Impression */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground">IMPRESSION</label>
             <Textarea
@@ -275,6 +286,15 @@ export default function ReportingPage() {
             </Card>
           )}
 
+          {/* ── Image attachments ── */}
+          <div className="border border-border rounded-lg p-4 bg-card/50">
+            <ReportImageManager
+              images={images}
+              onChange={setImages}
+              disabled={signed}
+            />
+          </div>
+
           {/* Version history */}
           {report.versions.length > 0 && (
             <div>
@@ -292,7 +312,35 @@ export default function ReportingPage() {
         </div>
       </div>
 
-      {/* Template Dialog */}
+      {/* ── PDF Preview Dialog ── */}
+      <Dialog open={pdfPreviewOpen} onOpenChange={setPdfPreviewOpen}>
+        <DialogContent className="max-w-5xl h-[90vh] p-0 flex flex-col">
+          <DialogHeader className="px-5 py-3 border-b border-border shrink-0 flex-row items-center justify-between">
+            <DialogTitle className="text-sm flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              PDF Preview — {study.accessionNumber}
+              {images.length > 0 && (
+                <span className="text-xs text-muted-foreground font-normal">· {images.length} image{images.length > 1 ? 's' : ''} attached</span>
+              )}
+            </DialogTitle>
+            <div className="flex items-center gap-2">
+              <RadiologyReportDownload study={study} report={report} images={images}>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+                  <Download className="h-3.5 w-3.5" />Download PDF
+                </Button>
+              </RadiologyReportDownload>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setPdfPreviewOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            <RadiologyReportViewer study={study} report={report} images={images} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Template Dialog ── */}
       <Dialog open={templateOpen} onOpenChange={setTemplateOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -319,7 +367,7 @@ export default function ReportingPage() {
         </DialogContent>
       </Dialog>
 
-      {/* RADS Dialog */}
+      {/* ── RADS Dialog ── */}
       <Dialog open={radsDialogOpen} onOpenChange={setRadsDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
