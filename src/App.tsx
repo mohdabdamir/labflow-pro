@@ -9,6 +9,13 @@ import { RouteGuard } from "@/components/layout/RouteGuard";
 import HomePage from "./pages/HomePage";
 import UnderConstruction from "./pages/UnderConstruction";
 import Dashboard from "./pages/Dashboard";
+import RadiologyLayout from "./pages/radiology/RadiologyLayout";
+import WorklistPage from "./pages/radiology/WorklistPage";
+import StudyViewerPage from "./pages/radiology/StudyViewerPage";
+import ComparisonViewerPage from "./pages/radiology/ComparisonViewerPage";
+import ReportingPage from "./pages/radiology/ReportingPage";
+import ReportsListPage from "./pages/radiology/ReportsListPage";
+import AdminPage from "./pages/radiology/AdminPage";
 import CasesPage from "./pages/CasesPage";
 import ServicesPage from "./pages/ServicesPage";
 import ProfilesPage from "./pages/ProfilesPage";
@@ -65,12 +72,22 @@ const App = () => (
 
             {/* Other medical center modules — under construction */}
             <Route path="/anatomic-pathology" element={<UnderConstruction />} />
-            <Route path="/radiology" element={<UnderConstruction />} />
             <Route path="/pharmacy" element={<UnderConstruction />} />
             <Route path="/appointments" element={<UnderConstruction />} />
             <Route path="/emergency" element={<UnderConstruction />} />
             <Route path="/outpatient" element={<UnderConstruction />} />
             <Route path="/inpatient" element={<UnderConstruction />} />
+
+            {/* Radiology module */}
+            <Route path="/radiology" element={<RadiologyLayout />}>
+              <Route index element={<WorklistPage />} />
+              <Route path="viewer" element={<WorklistPage />} />
+              <Route path="viewer/:studyId" element={<StudyViewerPage />} />
+              <Route path="compare" element={<ComparisonViewerPage />} />
+              <Route path="reports" element={<ReportsListPage />} />
+              <Route path="reports/:studyId" element={<ReportingPage />} />
+              <Route path="admin" element={<AdminPage />} />
+            </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
