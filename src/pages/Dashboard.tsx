@@ -97,7 +97,7 @@ export default function Dashboard() {
                   })}
                 </p>
               </div>
-              <Link to="/cases">
+              <Link to="/lab/cases">
                 <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
                   <FileText className="mr-2 h-4 w-4" />
                   New Case
