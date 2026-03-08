@@ -132,7 +132,7 @@ export default function Dashboard() {
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Recent Cases</CardTitle>
-              <Link to="/cases">
+              <Link to="/lab/cases">
                 <Button variant="ghost" size="sm">
                   View All
                   <TrendingUp className="ml-2 h-4 w-4" />
