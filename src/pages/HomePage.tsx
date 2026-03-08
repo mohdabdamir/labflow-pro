@@ -76,7 +76,7 @@ const MODULES: Module[] = [
     subtitle: 'X-Ray, CT, MRI, Ultrasound & PACS integration',
     icon: Radiation,
     href: '/radiology',
-    ready: false,
+    ready: true,
     color: 'text-orange-600',
     bgGradient: 'from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/40',
     borderColor: 'border-orange-200 dark:border-orange-800',
