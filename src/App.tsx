@@ -3,9 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme";
 import { RouteGuard } from "@/components/layout/RouteGuard";
+import HomePage from "./pages/HomePage";
+import UnderConstruction from "./pages/UnderConstruction";
 import Dashboard from "./pages/Dashboard";
 import CasesPage from "./pages/CasesPage";
 import ServicesPage from "./pages/ServicesPage";
@@ -33,17 +35,43 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<GuardedRoute path="/" element={<Dashboard />} />} />
-            <Route path="/cases" element={<GuardedRoute path="/cases" element={<CasesPage />} />} />
-            <Route path="/services" element={<GuardedRoute path="/services" element={<ServicesPage />} />} />
-            <Route path="/profiles" element={<GuardedRoute path="/profiles" element={<ProfilesPage />} />} />
-            <Route path="/packages" element={<GuardedRoute path="/packages" element={<PackagesPage />} />} />
-            <Route path="/clients" element={<GuardedRoute path="/clients" element={<ClientsPage />} />} />
-            <Route path="/pricelists" element={<GuardedRoute path="/pricelists" element={<PriceListsPage />} />} />
-            <Route path="/normalranges" element={<GuardedRoute path="/normalranges" element={<NormalRangesPage />} />} />
-            <Route path="/billing" element={<GuardedRoute path="/billing" element={<BillingPage />} />} />
-            <Route path="/settings" element={<GuardedRoute path="/settings" element={<SettingsPage />} />} />
-            <Route path="/users" element={<GuardedRoute path="/users" element={<UsersPage />} />} />
+            {/* Medical Center Home — portal entry point */}
+            <Route path="/" element={<HomePage />} />
+
+            {/* Lab module — all sub-routes under /lab */}
+            <Route path="/lab" element={<GuardedRoute path="/lab" element={<Dashboard />} />} />
+            <Route path="/lab/cases" element={<GuardedRoute path="/lab/cases" element={<CasesPage />} />} />
+            <Route path="/lab/services" element={<GuardedRoute path="/lab/services" element={<ServicesPage />} />} />
+            <Route path="/lab/profiles" element={<GuardedRoute path="/lab/profiles" element={<ProfilesPage />} />} />
+            <Route path="/lab/packages" element={<GuardedRoute path="/lab/packages" element={<PackagesPage />} />} />
+            <Route path="/lab/clients" element={<GuardedRoute path="/lab/clients" element={<ClientsPage />} />} />
+            <Route path="/lab/pricelists" element={<GuardedRoute path="/lab/pricelists" element={<PriceListsPage />} />} />
+            <Route path="/lab/normalranges" element={<GuardedRoute path="/lab/normalranges" element={<NormalRangesPage />} />} />
+            <Route path="/lab/billing" element={<GuardedRoute path="/lab/billing" element={<BillingPage />} />} />
+            <Route path="/lab/settings" element={<GuardedRoute path="/lab/settings" element={<SettingsPage />} />} />
+            <Route path="/lab/users" element={<GuardedRoute path="/lab/users" element={<UsersPage />} />} />
+
+            {/* Legacy routes — redirect-friendly aliases (same components, same guard) */}
+            <Route path="/cases" element={<GuardedRoute path="/lab/cases" element={<CasesPage />} />} />
+            <Route path="/services" element={<GuardedRoute path="/lab/services" element={<ServicesPage />} />} />
+            <Route path="/profiles" element={<GuardedRoute path="/lab/profiles" element={<ProfilesPage />} />} />
+            <Route path="/packages" element={<GuardedRoute path="/lab/packages" element={<PackagesPage />} />} />
+            <Route path="/clients" element={<GuardedRoute path="/lab/clients" element={<ClientsPage />} />} />
+            <Route path="/pricelists" element={<GuardedRoute path="/lab/pricelists" element={<PriceListsPage />} />} />
+            <Route path="/normalranges" element={<GuardedRoute path="/lab/normalranges" element={<NormalRangesPage />} />} />
+            <Route path="/billing" element={<GuardedRoute path="/lab/billing" element={<BillingPage />} />} />
+            <Route path="/settings" element={<GuardedRoute path="/lab/settings" element={<SettingsPage />} />} />
+            <Route path="/users" element={<GuardedRoute path="/lab/users" element={<UsersPage />} />} />
+
+            {/* Other medical center modules — under construction */}
+            <Route path="/anatomic-pathology" element={<UnderConstruction />} />
+            <Route path="/radiology" element={<UnderConstruction />} />
+            <Route path="/pharmacy" element={<UnderConstruction />} />
+            <Route path="/appointments" element={<UnderConstruction />} />
+            <Route path="/emergency" element={<UnderConstruction />} />
+            <Route path="/outpatient" element={<UnderConstruction />} />
+            <Route path="/inpatient" element={<UnderConstruction />} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
