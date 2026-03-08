@@ -81,6 +81,10 @@ const MODULES: Module[] = [
     bgGradient: 'from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/40',
     borderColor: 'border-orange-200 dark:border-orange-800',
     category: 'imaging',
+    stats: [
+      { label: 'Studies Today', value: '9' },
+      { label: 'STAT Pending', value: '3' },
+    ],
   },
   {
     id: 'pharmacy',
