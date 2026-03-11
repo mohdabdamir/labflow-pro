@@ -61,14 +61,18 @@ const MODULES: Module[] = [
   {
     id: 'anatomic-pathology',
     title: 'Anatomic Pathology',
-    subtitle: 'Histopathology, cytology & autopsy reports',
+    subtitle: 'Histopathology, cytology, grossing & pathology reports',
     icon: Microscope,
-    href: '/anatomic-pathology',
-    ready: false,
+    href: '/ap',
+    ready: true,
     color: 'text-purple-600',
     bgGradient: 'from-purple-50 to-violet-50 dark:from-purple-950/40 dark:to-violet-950/40',
     borderColor: 'border-purple-200 dark:border-purple-800',
     category: 'laboratory',
+    stats: [
+      { label: 'Active Cases', value: '6' },
+      { label: 'Pending Reports', value: '3' },
+    ],
   },
   {
     id: 'radiology',
@@ -281,11 +285,11 @@ export default function HomePage() {
             </div>
             <div className="flex gap-4">
               <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 border border-white/20">
-                <p className="text-2xl font-bold text-primary-foreground">1</p>
-                <p className="text-xs text-primary-foreground/70">Active Module</p>
+                <p className="text-2xl font-bold text-primary-foreground">3</p>
+                <p className="text-xs text-primary-foreground/70">Active Modules</p>
               </div>
               <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 border border-white/20">
-                <p className="text-2xl font-bold text-primary-foreground">7</p>
+                <p className="text-2xl font-bold text-primary-foreground">5</p>
                 <p className="text-xs text-primary-foreground/70">Coming Soon</p>
               </div>
             </div>

@@ -17,6 +17,13 @@ import ReportingPage from "./pages/radiology/ReportingPage";
 import ReportsListPage from "./pages/radiology/ReportsListPage";
 import AdminPage from "./pages/radiology/AdminPage";
 import CasesPage from "./pages/CasesPage";
+import APLayout from "./pages/ap/APLayout";
+import APDashboard from "./pages/ap/APDashboard";
+import APCaseCreation from "./pages/ap/APCaseCreation";
+import APCaseDetail from "./pages/ap/APCaseDetail";
+import APGrossing from "./pages/ap/APGrossing";
+import APTranscription from "./pages/ap/APTranscription";
+import APBillingCodes from "./pages/ap/APBillingCodes";
 import ServicesPage from "./pages/ServicesPage";
 import ProfilesPage from "./pages/ProfilesPage";
 import PackagesPage from "./pages/PackagesPage";
@@ -69,6 +76,18 @@ const App = () => (
             <Route path="/billing" element={<GuardedRoute path="/lab/billing" element={<BillingPage />} />} />
             <Route path="/settings" element={<GuardedRoute path="/lab/settings" element={<SettingsPage />} />} />
             <Route path="/users" element={<GuardedRoute path="/lab/users" element={<UsersPage />} />} />
+
+            {/* Anatomic Pathology module */}
+            <Route path="/ap" element={<APLayout />}>
+              <Route index element={<APDashboard />} />
+              <Route path="cases" element={<APDashboard />} />
+              <Route path="cases/new" element={<APCaseCreation />} />
+              <Route path="cases/:id" element={<APCaseDetail />} />
+              <Route path="cases/:id/grossing" element={<APGrossing />} />
+              <Route path="cases/:id/transcription" element={<APTranscription />} />
+              <Route path="billing-codes" element={<APBillingCodes />} />
+              <Route path="settings" element={<APDashboard />} />
+            </Route>
 
             {/* Other medical center modules — under construction */}
             <Route path="/anatomic-pathology" element={<UnderConstruction />} />
