@@ -77,6 +77,18 @@ const App = () => (
             <Route path="/settings" element={<GuardedRoute path="/lab/settings" element={<SettingsPage />} />} />
             <Route path="/users" element={<GuardedRoute path="/lab/users" element={<UsersPage />} />} />
 
+            {/* Anatomic Pathology module */}
+            <Route path="/ap" element={<APLayout />}>
+              <Route index element={<APDashboard />} />
+              <Route path="cases" element={<APDashboard />} />
+              <Route path="cases/new" element={<APCaseCreation />} />
+              <Route path="cases/:id" element={<APCaseDetail />} />
+              <Route path="cases/:id/grossing" element={<APGrossing />} />
+              <Route path="cases/:id/transcription" element={<APTranscription />} />
+              <Route path="billing-codes" element={<APBillingCodes />} />
+              <Route path="settings" element={<APDashboard />} />
+            </Route>
+
             {/* Other medical center modules — under construction */}
             <Route path="/anatomic-pathology" element={<UnderConstruction />} />
             <Route path="/pharmacy" element={<UnderConstruction />} />
