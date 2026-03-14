@@ -1,98 +1,107 @@
 
-## What exists now
+## Full User Master Module + Permission-Gated Navigation
 
-The `StudyViewerPage.tsx` is a ~508-line file with:
-- A `SimulatedImage` canvas renderer that draws anatomy shapes using Window/Level values
-- Basic tool state (`pan`, `zoom`, `wl`, `length`, `angle`, `circle`, `text`, `arrow`)
-- Measurement state stored but drawn as a static yellow label overlay (not interactive canvas lines)
-- W/L sliders exist in the bottom bar but only adjust display values — no canvas mouse interaction
-- No HU calculation, no MPR planes, no DICOM connection configuration
-
-The `AdminPage.tsx` has preferences, hanging protocols, templates, users, shortcuts tabs — no DICOM machine configuration tab.
-
-`RadiologyLayout.tsx` nav: Worklist, Viewer, Compare, Reports, Admin.
+### What's broken
+- `src/lib/permissions.ts` has fatal TS/JSX errors (uses Ant Design JSX, undefined hooks — the file is a stub). This must be fully rewritten.
+- All files in `src/components/users/` are stubs that reference Ant Design (`Table`, `Form`, `Modal`, etc.) which is not installed. Every one must be replaced with real shadcn-based implementations.
 
 ---
 
-## Plan: 5 Major Feature Areas
+### What gets built
 
-### 1. Interactive Measurement Tool (canvas-drawn lines with labels)
-**Where**: `StudyViewerPage.tsx` — rewrite the canvas interaction layer
+#### 1. Fix `src/lib/permissions.ts`
+Rewrite as a clean, working TypeScript-only file (no JSX). Exports:
+- `Module` and `Action` enums (keep as-is)
+- `usePermissions()` hook — reads `currentUser` from a new `useUserStore` context
+- `RequirePermission` wrapper component — hides UI if user lacks permission
+- `hasPageAccess(role, path)` helper for sidebar/route guarding
 
-**What changes**:
-- Add `mousedown`/`mousemove`/`mouseup` event handlers to the viewport `<div>` (not the canvas, to allow overlay)
-- When tool is `length`: on mousedown store `startPoint`, on mousemove draw a temporary line overlay, on mouseup finalize the measurement and compute pixel distance → convert to mm using a simulated pixel spacing (e.g. 0.5mm/pixel for CT)
-- Render all saved measurements as SVG overlay on top of the canvas (positioned absolutely), showing: line from P1→P2 + numeric label in mm at midpoint
-- Measurements persist per series+slice, filtered on render
+#### 2. User Store / Auth Context (`src/hooks/useUserStore.ts`)
+A lightweight localStorage-based "session" store — no real auth, but simulates login state:
+- Stores `currentUser` (the logged-in system user) in localStorage
+- Exposes `setCurrentUser`, `logout`, `currentUser`
+- Admin user pre-seeded from `mockUsers` (U001)
 
-### 2. Hounsfield Unit (HU) Display
-**Where**: `StudyViewerPage.tsx` — add HU calculation on canvas click/hover
+#### 3. Enhanced `src/types/lab.ts` — extend `User`
+Add `permissions` field to the existing `User` type:
+```
+permissions: Partial<Record<Module, Action[]>>
+```
+This lets each user have granular per-module action grants.
 
-**What changes**:
-- Add a `huProbe` tool to the toolbar
-- On canvas mousemove (when HU tool active), sample the pixel at cursor position from the canvas `ImageData` and derive a simulated HU value: `HU = (pixelGrayscale / 255) * (wl.window) + (wl.level - wl.window/2)`
-- For ROI circle: compute min/max/mean HU inside the circle region
-- Display a small HU readout badge near cursor (absolute positioned tooltip-style) showing current HU, and in a side panel for ROI
-- Add persistent HU display in the bottom bar showing last sampled value
+#### 4. New `src/pages/UsersPage.tsx`
+A full admin page at route `/users`, accessible only to admins. Contains two tabs:
 
-### 3. Enhanced Windowing Panel
-**Where**: `StudyViewerPage.tsx` bottom bar + a dedicated collapsible WL panel
+**Tab 1 — User List**
+- Searchable/filterable table (shadcn `Table`)
+- Columns: Name, Username, Role, Department, Status, Last actions
+- Row actions: Edit, Toggle Active/Inactive, Reset Password (clears stored password)
+- "Add User" button → opens `UserFormDialog`
 
-**What changes**:
-- Already has basic W/L sliders in the bottom bar. Enhance:
-  - Make sliders always visible (not just `xl:flex`)
-  - Add current numeric inputs next to sliders so user can type exact values
-  - Add a "Custom" preset entry that saves current WW/WC values with a user-supplied name to localStorage
-  - Show W/L values in the canvas overlay (already exists as text overlay)
-  - Add drag-to-adjust: when `wl` tool is active, mouse drag left/right adjusts WC (level), up/down adjusts WW (window) — this is the standard DICOM viewer interaction
+**Tab 2 — Roles & Permissions**
+- Select a role from a list
+- Permission matrix: rows = Modules, columns = Actions
+- Toggle checkboxes update role-level defaults
+- "Save Role Permissions" persists to localStorage
 
-### 4. MPR (Multi-Planar Reconstruction) Panel
-**Where**: New dedicated panel/mode in `StudyViewerPage.tsx`
+#### 5. `src/components/users/UserFormDialog.tsx` (new, replaces broken UserForm)
+A shadcn Dialog with a tabbed form:
+- **Basic Info**: First name, Last name, Username, Email, Phone, Job Title, Department
+- **Account**: Role (dropdown), Status, Employment Type, Join Date
+- **Permissions**: Per-module override grid (inherit from role or custom override)
+Uses `react-hook-form` + `zod` for validation. On save → writes to `useLabData` users array.
 
-**What changes**:
-- Add an `mpr` toggle button in the toolbar
-- When MPR is enabled, the layout switches to a 3-panel view (Axial | Sagittal | Coronal) side by side regardless of layout setting
-- Each panel renders the `SimulatedImage` with the matching series pattern (`axial`, `sagittal`, `coronal`) — if only one series is present, the pattern is synthetically adjusted
-- A crosshair cursor line is shown in each plane (the intersection point of the other two planes)
-- Slice navigation in one panel updates the crosshair position in the other two panels (synchronized crosshair)
-- MPR panel header labels: "AX", "SAG", "COR" with current slice number
+#### 6. Route Permission Guard (`src/components/layout/RouteGuard.tsx`)
+A wrapper that checks `hasPageAccess(currentUser.role, path)`:
+- If denied → renders a "403 – Access Denied" card instead of the page
+- Default access matrix:
 
-### 5. DICOM Connectivity Configuration Page
-**Where**: New tab in `AdminPage.tsx` — "DICOM" tab added to the existing Tabs component
-
-**What changes**:
-- Add `DicomNode` type: `{ id, name, aeTitle, ip, port, modality, type: 'SCU'|'SCP'|'MWL', status: 'Connected'|'Disconnected'|'Error'|'Testing', lastPing?: string, errorMessage?: string }`
-- Seed ~8 mock modality nodes (CT1, MR1, XR1, US1, NM1, Worklist, PACS Archive, etc.)
-- Store in component state (simulated localStorage persistence)
-- UI: a table of modality nodes, each row showing: Name, AE Title, IP, Port, Modality, Type, Status badge, Test button
-- "Test Connection" button → sets status to `Testing` with a spinner for 1.5 seconds, then randomly resolves to `Connected` or `Error` with a simulated latency value and timestamp
-- "Add Modality" button → opens a Dialog form: Name, AE Title, IP, Port, Modality (multi-select), Type (SCU/SCP/MWL/Store)
-- Status badges: green=Connected, red=Error, gray=Disconnected, blue/pulsing=Testing
-- Error detail expandable row showing last error message and timestamp
-- A "Test All" button at top that queues all nodes
-- Error log section below the table showing recent DICOM events with timestamps
-
----
-
-## Files to change
-
-| File | Change |
+| Route | Roles Allowed |
 |---|---|
-| `src/pages/radiology/StudyViewerPage.tsx` | Rewrite with: interactive canvas measurement (SVG overlay), HU probe tool, WL drag interaction, MPR mode |
-| `src/pages/radiology/AdminPage.tsx` | Add DICOM tab with connectivity configuration |
-| `src/types/radiology.ts` | Add `DicomNode`, `HUReading` types, extend `Measurement` |
+| `/` Dashboard | all |
+| `/cases` | admin, receptionist, technician, pathologist, medical_director |
+| `/billing` | admin, billing |
+| `/users` | admin |
+| `/services`, `/profiles`, `/packages` | admin, medical_director |
+| `/clients`, `/pricelists`, `/normalranges` | admin, medical_director |
+| `/settings` | admin |
+
+#### 7. Sidebar updates (`src/components/layout/Sidebar.tsx`)
+- Add "Users" nav item (icon: `UsersRound`) pointing to `/users`
+- Filter `navItems` based on `currentUser.role` using `hasPageAccess`
+- Show current user name + role badge at the bottom of sidebar (above Settings)
+
+#### 8. Header updates (`src/components/layout/Header.tsx`)
+- Show logged-in user name + role chip
+- "Switch User" quick button (for demo purposes — opens a popover to pick from mockUsers)
 
 ---
 
-## Technical approach for canvas interaction
+### File change summary
 
-The viewport `<div>` gets `onMouseDown`, `onMouseMove`, `onMouseUp` handlers. Over it sits an `<svg>` absolutely positioned overlay (full dimensions) that renders:
-- In-progress measurement line (dashed, while dragging)
-- Finalized measurement lines with endpoint dots and mm label
-- HU probe cursor readout
+| File | Action |
+|---|---|
+| `src/lib/permissions.ts` | **Rewrite** — fix all TS errors, pure TS module |
+| `src/hooks/useUserStore.ts` | **Create** — localStorage session context |
+| `src/pages/UsersPage.tsx` | **Create** — full user management page |
+| `src/components/users/UserFormDialog.tsx` | **Create** — shadcn form replacing broken stub |
+| `src/components/users/UserPermissionsMatrix.tsx` | **Create** — role permission matrix |
+| `src/components/layout/RouteGuard.tsx` | **Create** — access control wrapper |
+| `src/components/layout/Sidebar.tsx` | **Edit** — add Users nav, filter by role |
+| `src/components/layout/Header.tsx` | **Edit** — show current user, switch user |
+| `src/App.tsx` | **Edit** — wrap pages with RouteGuard, add `/users` route |
+| `src/types/lab.ts` | **Edit** — extend User type with permissions |
+| `src/data/mockData.ts` | **Edit** — add permissions to mockUsers |
+| `src/components/users/UserMaster.tsx` etc. | **Delete/Replace** — stubs replaced by real components |
 
-Canvas coordinates are translated from DOM mouse events using `getBoundingClientRect()` + scale factor (DOM size vs canvas 512×512).
+---
 
-For HU: sample `ctx.getImageData(x, y, 1, 1)` from the canvas element directly (not the React component — accessed via `canvasRef` forwarded from `SimulatedImage`).
+### Technical approach for permission checks
 
-For MPR: `SimulatedImage` stays the same, MPR mode just forces 3 viewports always showing axial/sagittal/coronal patterns of the study's series.
+All sidebar items and page routes will check:
+
+```
+hasPageAccess(role: UserRole, path: string): boolean
+```
+
+Pages additionally wrapped in `<RouteGuard path="/users">` which renders 403 if no access. `RequirePermission` used for fine-grained button-level hiding (e.g., hide "Delete" button for non-admins).

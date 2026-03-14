@@ -156,3 +156,29 @@ export interface WindowLevel {
   window: number;
   level: number;
 }
+
+export interface DicomNode {
+  id: string;
+  name: string;
+  aeTitle: string;
+  ip: string;
+  port: number;
+  modality: string;
+  type: 'SCU' | 'SCP' | 'MWL' | 'Store';
+  status: 'Connected' | 'Disconnected' | 'Error' | 'Testing';
+  lastPing?: string;
+  latencyMs?: number;
+  errorMessage?: string;
+}
+
+export interface HUReading {
+  id: string;
+  x: number;
+  y: number;
+  value: number;
+  min?: number;
+  max?: number;
+  mean?: number;
+  seriesId: string;
+  sliceIndex: number;
+}
