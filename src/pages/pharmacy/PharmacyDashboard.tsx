@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { usePharmacyData } from '@/hooks/usePharmacyData';
 import {
   Users, Clock, AlertTriangle, CheckCircle2, Package, Wifi,
-  ChevronRight, Bell, Activity, TrendingUp, Robot, Cpu,
+  ChevronRight, Bell, Activity, TrendingUp, Cpu,
   ClipboardList, Pill, RefreshCw, PhoneCall,
 } from 'lucide-react';
 import type { QueueTicket } from '@/types/pharmacy';
