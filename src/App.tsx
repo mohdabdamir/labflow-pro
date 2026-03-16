@@ -97,9 +97,20 @@ const App = () => (
               <Route path="settings" element={<APDashboard />} />
             </Route>
 
+            {/* Pharmacy module */}
+            <Route path="/pharmacy" element={<PharmacyLayout />}>
+              <Route index element={<PharmacyDashboard />} />
+              <Route path="prescriptions" element={<PrescriptionQueue />} />
+              <Route path="inventory" element={<InventoryPage />} />
+              <Route path="patients" element={<PatientSearchPage />} />
+              <Route path="cds" element={<CDSPage />} />
+              <Route path="analytics" element={<PharmacyAnalytics />} />
+              <Route path="integrations" element={<IntegrationsPage />} />
+              <Route path="settings" element={<PharmacyDashboard />} />
+            </Route>
+
             {/* Other medical center modules — under construction */}
             <Route path="/anatomic-pathology" element={<UnderConstruction />} />
-            <Route path="/pharmacy" element={<UnderConstruction />} />
             <Route path="/appointments" element={<UnderConstruction />} />
             <Route path="/emergency" element={<UnderConstruction />} />
             <Route path="/outpatient" element={<UnderConstruction />} />
