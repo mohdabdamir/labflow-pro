@@ -93,14 +93,18 @@ const MODULES: Module[] = [
   {
     id: 'pharmacy',
     title: 'Pharmacy',
-    subtitle: 'Dispensing, inventory, prescriptions & drug interactions',
+    subtitle: 'Dispensing, queue management, inventory, HL7 & clinical decision support',
     icon: Pill,
     href: '/pharmacy',
-    ready: false,
+    ready: true,
     color: 'text-green-600',
     bgGradient: 'from-green-50 to-emerald-50 dark:from-green-950/40 dark:to-emerald-950/40',
     borderColor: 'border-green-200 dark:border-green-800',
     category: 'pharmacy',
+    stats: [
+      { label: 'Queue Active', value: '6' },
+      { label: 'Rx Pending', value: '7' },
+    ],
   },
   {
     id: 'appointments',
