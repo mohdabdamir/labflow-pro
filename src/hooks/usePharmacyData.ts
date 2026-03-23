@@ -208,7 +208,7 @@ export function usePharmacyData() {
     counters, reorderAlerts, hl7Logs, patients, metrics, transactions,
     queueStats, rxStats, inventoryStats,
     callNextTicket, updateTicketStatus, addQueueTicket,
-    updatePrescriptionStatus, dispenseItem,
+    updatePrescriptionStatus, advanceToDispensing, dispenseItem,
     adjustInventory,
     testHL7Connection, testAllConnections,
   };
