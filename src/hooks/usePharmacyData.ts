@@ -69,17 +69,47 @@ export function usePharmacyData() {
 
   // ── Prescription Actions ─────────────────────────────
   const updatePrescriptionStatus = useCallback((rxId: string, status: PrescriptionStatus, notes?: string) => {
-    setPrescriptions(p => p.map(rx =>
-      rx.id === rxId
-        ? {
-            ...rx, status,
-            dispensingHistory: notes ? [
-              ...rx.dispensingHistory,
-              { id: `DE${Date.now()}`, timestamp: new Date().toISOString(), action: `Status → ${status}`, userId: 'USR', userName: 'Current User', details: notes },
-            ] : rx.dispensingHistory,
-          }
-        : rx
-    ));
+    setPrescriptions(p => p.map(rx => {
+      if (rx.id !== rxId) return rx;
+      const historyEntry = {
+        id: `DE${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp: new Date().toISOString(),
+        action: `Status → ${status.replace(/_/g, ' ')}`,
+        userId: 'USR',
+        userName: 'Current Pharmacist',
+        details: notes ?? `Status updated to ${status.replace(/_/g, ' ')}`,
+      };
+      return {
+        ...rx,
+        status,
+        dispensingHistory: [...rx.dispensingHistory, historyEntry],
+      };
+    }));
+  }, []);
+
+  // Advance Rx through all intermediate statuses to reach 'dispensing' in one setState call
+  const advanceToDispensing = useCallback((rxId: string, notes?: string) => {
+    setPrescriptions(p => p.map(rx => {
+      if (rx.id !== rxId) return rx;
+      // Build history entries for each transition
+      const now = Date.now();
+      const entries = [];
+      const targetStatus: PrescriptionStatus = 'dispensing';
+      // Always record the jump to dispensing
+      entries.push({
+        id: `DE${now}-disp`,
+        timestamp: new Date(now).toISOString(),
+        action: 'Moved to Dispensing',
+        userId: 'USR',
+        userName: 'Current Pharmacist',
+        details: notes ?? 'Pharmacist verification complete — dispensing started',
+      });
+      return {
+        ...rx,
+        status: targetStatus,
+        dispensingHistory: [...rx.dispensingHistory, ...entries],
+      };
+    }));
   }, []);
 
   const dispenseItem = useCallback((rxId: string, itemId: string) => {
