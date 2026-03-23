@@ -43,7 +43,7 @@ const FILTER_TABS = [
 // Main Page
 // ─────────────────────────────────────────────
 export default function PrescriptionQueue() {
-  const { prescriptions, updatePrescriptionStatus, dispenseItem, updateTicketStatus, queue, rxStats } = usePharmacyData();
+  const { prescriptions, updatePrescriptionStatus, advanceToDispensing, dispenseItem, updateTicketStatus, queue, rxStats } = usePharmacyData();
   const { toast } = useToast();
   const [search, setSearch]       = useState('');
   const [filterTab, setFilterTab] = useState('all');
