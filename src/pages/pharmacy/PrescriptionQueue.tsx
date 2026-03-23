@@ -102,23 +102,10 @@ export default function PrescriptionQueue() {
     setCompleting(false);
   }
 
-  // Step 1 → 2: move Rx to 'dispensing'
+  // Step 1 → 2: advance Rx directly to 'dispensing' in a single atomic update
   function handleProceedToDispense() {
     if (!selectedRx) return;
-    // Move status forward as needed to reach 'dispensing'
-    const statusToDispensing: Record<string, string> = {
-      received: 'verification',
-      clinical_review: 'verification',
-      on_hold: 'verification',
-    };
-    const intermediary = statusToDispensing[selectedRx.status];
-    if (intermediary) {
-      updatePrescriptionStatus(selectedRx.id, intermediary as any, pharmacistNotes || undefined);
-    }
-    // Then move to dispensing
-    setTimeout(() => {
-      updatePrescriptionStatus(selectedRx.id, 'dispensing', undefined);
-    }, 0);
+    advanceToDispensing(selectedRx.id, pharmacistNotes || undefined);
     setDispensingStep('dispense');
     toast({ title: `Rx ${selectedRx.rxNumber}`, description: 'Moved to dispensing stage' });
   }
