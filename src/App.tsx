@@ -25,6 +25,13 @@ import APGrossing from "./pages/ap/APGrossing";
 import APTranscription from "./pages/ap/APTranscription";
 import APBillingCodes from "./pages/ap/APBillingCodes";
 import PharmacyLayout from "./pages/pharmacy/PharmacyLayout";
+import AppointmentsLayout from "./pages/appointments/AppointmentsLayout";
+import AppointmentsDashboard from "./pages/appointments/AppointmentsDashboard";
+import CalendarView from "./pages/appointments/CalendarView";
+import PhysicianSchedule from "./pages/appointments/PhysicianSchedule";
+import PatientQueue from "./pages/appointments/PatientQueue";
+import AppointmentsReports from "./pages/appointments/AppointmentsReports";
+import AppointmentsSettings from "./pages/appointments/AppointmentsSettings";
 import PharmacyDashboard from "./pages/pharmacy/PharmacyDashboard";
 import PrescriptionQueue from "./pages/pharmacy/PrescriptionQueue";
 import InventoryPage from "./pages/pharmacy/InventoryPage";
@@ -109,9 +116,19 @@ const App = () => (
               <Route path="settings" element={<PharmacyDashboard />} />
             </Route>
 
+            {/* Appointments module */}
+            <Route path="/appointments" element={<AppointmentsLayout />}>
+              <Route index element={<AppointmentsDashboard />} />
+              <Route path="calendar" element={<CalendarView />} />
+              <Route path="schedule" element={<PhysicianSchedule />} />
+              <Route path="queue" element={<PatientQueue />} />
+              <Route path="waitlist" element={<PatientQueue />} />
+              <Route path="reports" element={<AppointmentsReports />} />
+              <Route path="settings" element={<AppointmentsSettings />} />
+            </Route>
+
             {/* Other medical center modules — under construction */}
             <Route path="/anatomic-pathology" element={<UnderConstruction />} />
-            <Route path="/appointments" element={<UnderConstruction />} />
             <Route path="/emergency" element={<UnderConstruction />} />
             <Route path="/outpatient" element={<UnderConstruction />} />
             <Route path="/inpatient" element={<UnderConstruction />} />

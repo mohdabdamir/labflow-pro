@@ -109,14 +109,18 @@ const MODULES: Module[] = [
   {
     id: 'appointments',
     title: 'Appointments',
-    subtitle: 'Scheduling, booking management & patient flow',
+    subtitle: 'Scheduling, physician calendars, queue & patient flow',
     icon: CalendarDays,
     href: '/appointments',
-    ready: false,
+    ready: true,
     color: 'text-rose-600',
     bgGradient: 'from-rose-50 to-pink-50 dark:from-rose-950/40 dark:to-pink-950/40',
     borderColor: 'border-rose-200 dark:border-rose-800',
     category: 'management',
+    stats: [
+      { label: 'Today\'s Apts', value: '15' },
+      { label: 'In Queue', value: '5' },
+    ],
   },
   {
     id: 'emergency',
@@ -289,11 +293,11 @@ export default function HomePage() {
             </div>
             <div className="flex gap-4">
               <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 border border-white/20">
-                <p className="text-2xl font-bold text-primary-foreground">3</p>
+                <p className="text-2xl font-bold text-primary-foreground">5</p>
                 <p className="text-xs text-primary-foreground/70">Active Modules</p>
               </div>
               <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 border border-white/20">
-                <p className="text-2xl font-bold text-primary-foreground">5</p>
+                <p className="text-2xl font-bold text-primary-foreground">3</p>
                 <p className="text-xs text-primary-foreground/70">Coming Soon</p>
               </div>
             </div>
