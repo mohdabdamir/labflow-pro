@@ -128,11 +128,15 @@ const MODULES: Module[] = [
     subtitle: 'Triage, ER tracking, critical alerts & resuscitation',
     icon: HeartPulse,
     href: '/emergency',
-    ready: false,
+    ready: true,
     color: 'text-red-600',
     bgGradient: 'from-red-50 to-rose-50 dark:from-red-950/40 dark:to-rose-950/40',
     borderColor: 'border-red-200 dark:border-red-800',
     category: 'clinical',
+    stats: [
+      { label: 'Active Patients', value: '12' },
+      { label: 'STAT Alerts', value: '2' },
+    ],
   },
   {
     id: 'outpatient',
