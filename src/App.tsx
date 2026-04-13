@@ -8,6 +8,14 @@ import { ThemeProvider } from "@/components/theme";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 import HomePage from "./pages/HomePage";
 import UnderConstruction from "./pages/UnderConstruction";
+import EmergencyLayout from "./pages/emergency/EmergencyLayout";
+import TrackingBoard from "./pages/emergency/TrackingBoard";
+import TriagePage from "./pages/emergency/TriagePage";
+import SepsisMonitor from "./pages/emergency/SepsisMonitor";
+import HandoverPage from "./pages/emergency/HandoverPage";
+import DischargePage from "./pages/emergency/DischargePage";
+import MCIPage from "./pages/emergency/MCIPage";
+import EDSettingsPage from "./pages/emergency/EDSettingsPage";
 import Dashboard from "./pages/Dashboard";
 import RadiologyLayout from "./pages/radiology/RadiologyLayout";
 import WorklistPage from "./pages/radiology/WorklistPage";
@@ -129,7 +137,16 @@ const App = () => (
 
             {/* Other medical center modules — under construction */}
             <Route path="/anatomic-pathology" element={<UnderConstruction />} />
-            <Route path="/emergency" element={<UnderConstruction />} />
+            <Route path="/emergency" element={<EmergencyLayout />}>
+              <Route index element={<TrackingBoard />} />
+              <Route path="triage" element={<TriagePage />} />
+              <Route path="triage/:patientId" element={<TriagePage />} />
+              <Route path="sepsis" element={<SepsisMonitor />} />
+              <Route path="handover" element={<HandoverPage />} />
+              <Route path="discharge" element={<DischargePage />} />
+              <Route path="mci" element={<MCIPage />} />
+              <Route path="settings" element={<EDSettingsPage />} />
+            </Route>
             <Route path="/outpatient" element={<UnderConstruction />} />
             <Route path="/inpatient" element={<UnderConstruction />} />
 
