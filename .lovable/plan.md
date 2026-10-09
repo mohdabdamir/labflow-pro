@@ -1,60 +1,40 @@
+## Anatomic Pathology: Templates, Searchable Dropdowns, Physician Requests, AP Settings
 
+### 1. Searchable dropdowns everywhere in AP
+Every dropdown in the AP screens (New Case, Grossing, Transcription, Case Detail, Billing Codes) becomes a type-to-filter picker. Example: on New Case, typing "gulf" in Client instantly narrows the list. Search ignores letter case and matches any part of the name or code.
 
-# Emergency Department Module — Implementation Plan
+### 2. Text templates for free-text fields
+Next to each AP text box (clinical history, clinical indication, notes, gross description, microscopic description, diagnosis, comment, frozen section, ancillary result, etc.) a small "Template" picker appears:
+- Searchable by template name
+- Picking a template loads its text into the box (option to replace or add to existing text)
+- Only templates meant for that field are shown (e.g. "Gross Description" templates only appear in the gross box)
+- Sample templates are included for each field so it can be tried right away
 
-## Architecture Summary
+### 3. One shared physician list on New Case
+Treating, Referring and CC Physicians all pick from the same list: physicians registered under the selected client.
+- Treating and Referring: single searchable pick
+- CC Physicians: multi-pick with removable chips (replaces the comma-typed box)
+- Changing the client clears the physician choices
 
-This is a client-side, event-driven Emergency Department module under `/emergency/*` with simulated real-time events using `setInterval` + reactive state. Since the project is localStorage-based with no backend, all "event streams," "WebSocket connections," and "Kafka" references are simulated with in-memory event emitters and interval-based state mutations. The module will feel real-time while being fully frontend.
+### 4. "Request New Physician" for non-admins
+A "+ New physician" button next to the physician pickers opens a popup: Name, Mobile, Email (all required, email/mobile checked for format).
+- Admins / users with approve rights: physician is added to the client right away
+- Everyone else: a pending request is created and the user sees "Sent for approval"; the pending name can be used on the current case marked "Pending approval"
+- Approvers see a badge count and an approval queue (Approve / Reject with reason). Approved physicians join the client's list.
 
-## Files to Create
+### 5. AP Settings page (admin)
+New "Settings" item in the AP sidebar with tabs:
+- **Templates** — add / edit / delete / search templates; choose which field each belongs to; turn on/off
+- **Masters** — manage the dropdown values: Case Types, Specimen Types, Fixatives, Stains, Priorities, Report Statuses, etc. (add / edit / disable / reorder)
+- **Physician Approvals** — the pending request queue and history
+- **Permissions** — per-role tick grid for AP actions: use templates, manage templates, manage masters, request physician, approve physician, finalize report; plus per-user overrides. Linked to the existing User Master roles.
 
-| File | Purpose |
-|---|---|
-| `src/types/emergency.ts` | All ED types: EDPatient, TriageRecord, Vitals, SepsisSIRS, HandoverTask, MCIPatient, BPAAlert, DischargeWorkflow, AcuityLevel (1-5 ESI) |
-| `src/data/emergencyMockData.ts` | Seed ~12 ED patients at various acuity/stages, vitals streams, lab results, pending orders |
-| `src/hooks/useEmergencyData.ts` | Central state hook: patient registry, event bus (pub/sub pattern), SIRS background listener, auto-escalation timers, discharge orchestrator, MCI mode toggle, offline queue |
-| `src/pages/emergency/EmergencyLayout.tsx` | Sidebar layout (matches Pharmacy/Appointments pattern) with nav: Tracking Board, Triage, Handover, Discharge, MCI, Settings. Live alert badges. |
-| `src/pages/emergency/TrackingBoard.tsx` | **Part 1** — The visual command center. Dynamic patient tiles with acuity color bands, real-time timers (time-since-triage, time-since-last-lab), yellow/red escalation highlights, zone grouping (Resus/Acute/Minor/Fast Track). Surge View toggle re-sorts by predicted discharge likelihood. |
-| `src/pages/emergency/TriagePage.tsx` | **Part 2** — Triage intake form. Chief complaint with NLP-style auto-suggestion (simulated FHIR history pull showing collapsed cardiology timeline for "chest pain"). Vitals entry. ESI/CTAS acuity suggestion algorithm based on vitals+age+complaint. Variance Override logging when nurse downgrades. |
-| `src/pages/emergency/SepsisMonitor.tsx` | **Part 3** — Background SIRS sentinel dashboard. Shows all active BPA alerts. Continuous listener checks vitals+labs against SIRS criteria (HR>90, RR>20, Temp>38, WBC>12/<4, Lactate>2). One-click "Order Sepsis Bundle" button. Alert feed with timestamps. |
-| `src/pages/emergency/HandoverPage.tsx` | **Part 4** — Shift handover wizard. Structured pending-actions per patient (not free text). Stale Result Escrow: detects orders placed near shift-end without results acknowledged. Mandatory Acknowledgement Tasks for incoming shift. Sign-off workflow. |
-| `src/pages/emergency/DischargePage.tsx` | **Part 5** — Discharge orchestration engine. Triggered on discharge order. Auto-generates: e-prescription push, follow-up slot query, PCP gap alert. Pediatric Guardian Mode: floating weight-based dosing calculator with stale-weight warning. |
-| `src/pages/emergency/MCIPage.tsx` | **Part 6** — Mass Casualty Incident mode. Activated via button or Ctrl+Alt+M. Triage-only UI: registers as MCI-GREEN-001, MCI-YELLOW-002, etc. No insurance checks. Standing trauma panel orders. Offline event queue with retry indicator. |
-| `src/pages/emergency/EDSettingsPage.tsx` | Configuration: CTAS wait-time targets, zone definitions, sepsis rule thresholds, MCI protocol presets, FHIR/HL7 endpoint config (simulated). |
+Non-admins without rights don't see the Settings item or the restricted buttons.
 
-## Key Technical Decisions
-
-**Event-Driven Simulation**: `useEmergencyData` maintains an internal event bus. Every 3-5 seconds, it fires simulated events (new vital, lab result, status change). Subscribers (tracking board tiles, sepsis listener) react immediately. This gives sub-second perceived latency.
-
-**SIRS Background Listener**: Runs as a `useEffect` interval inside the hook. On each tick, it scans all active patients' latest vitals + labs against SIRS criteria. When triggered, it pushes a BPA to an alerts array with a `NEW_CRITICAL_RESULT` flag, which the tracking board reads to apply the red-pulse CSS animation.
-
-**Tracking Board Tiles**: Each tile renders: patient name, MRN, acuity badge (1-5 with ESI colors), assigned zone, time-since-triage counter (live `setInterval`), assigned MD/RN, current status, and a predicted disposition score (simulated 0-100). Yellow highlight = CSS class toggled when `timeSinceLastLab > 30min` or triage wait exceeds CTAS target. Red pulse = `animate-pulse` with red border when critical flag is set.
-
-**Surge View**: A toggle that re-sorts tiles by `predictedDischargeScore` descending, showing which beds will free up soonest.
-
-**Acuity Suggestion**: Simple rule engine — e.g., chest pain + age>50 + abnormal vitals → ESI 2 suggestion. If nurse picks ESI 3, log a variance override event.
-
-**MCI Mode**: Sets a global `mciActive` flag. Tracking board switches to simplified triage-only view. Patient registration uses sequential MCI IDs. All events queue locally and show a sync status indicator.
-
-**Offline Queue**: Uses an in-memory array (simulating IndexedDB). When "offline mode" is toggled, events accumulate with a retry counter. A status bar shows "X events pending sync."
-
-## Routing Changes (App.tsx)
-
-Replace `<Route path="/emergency" element={<UnderConstruction />} />` with nested routes under `<EmergencyLayout />`:
-- `/emergency` → TrackingBoard (index)
-- `/emergency/triage` → TriagePage
-- `/emergency/triage/:patientId` → TriagePage (edit)
-- `/emergency/sepsis` → SepsisMonitor
-- `/emergency/handover` → HandoverPage
-- `/emergency/discharge` → DischargePage
-- `/emergency/mci` → MCIPage
-- `/emergency/settings` → EDSettingsPage
-
-## HomePage Changes
-
-Set `ready: true` for the Emergency module card. Add stats: `{ label: 'Active Patients', value: '8' }, { label: 'STAT Alerts', value: '2' }`.
-
-## Estimated Scope
-
-~10 new files, ~2 edited files (App.tsx, HomePage.tsx). Largest files will be TrackingBoard (~400 lines) and useEmergencyData (~500 lines).
-
+### Technical details
+- New `SearchableSelect` and `SearchableMultiSelect` components built on shadcn `Command` + `Popover`; replace `Select` usages across `src/pages/ap/*` and `src/components/ap/*`.
+- New `TemplatePicker` component taking a `fieldKey`; wrap AP `Textarea`s.
+- New hook `useAPConfig` (localStorage, same pattern as `useAPData`): `ap_templates`, `ap_masters`, `ap_physician_requests`, `ap_permissions`. Hardcoded arrays (`CASE_TYPES`, specimen lists, `PHYSICIANS`) are replaced by master lookups seeded with current values.
+- Physicians read from client records (`Physician` type in `types/lab.ts`, `lis_clients` store); approval appends to the client's `physicians`. Requests store requester, client, status, timestamps.
+- Add `Module.AP_SETTINGS` and AP actions to `lib/permissions.ts`; gate via `usePermissions` / `RequirePermission`; add `/ap/settings` route + `RouteGuard`.
+- `ccPhysicians` stored as string array (already the case type), form state changes from string to array.
