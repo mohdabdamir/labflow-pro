@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { TemplatePicker } from '@/components/ap/TemplatePicker';
+import { SearchableSelect } from '@/components/ap/SearchableSelect';
+import { useAPConfig } from '@/hooks/useAPConfig';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -314,12 +316,8 @@ export default function APTranscription() {
                               </Select>
                             </td>
                             <td className="py-1.5 pr-2">
-                              <Select value={a.stainName} onValueChange={v => updateAncillary(activeSpecimen, ai, 'stainName', v)}>
-                                <SelectTrigger className="h-7 w-32 text-xs"><SelectValue placeholder="Select stain..." /></SelectTrigger>
-                                <SelectContent className="max-h-48">
-                                  {COMMON_STAINS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
+                              <div className="w-40"><SearchableSelect className="h-7 text-xs" value={a.stainName} onChange={v => updateAncillary(activeSpecimen, ai, 'stainName', v)} placeholder="Stain..."
+                                options={Array.from(new Set([...stainMaster, ...COMMON_STAINS])).map(x => ({ value: x, label: x }))} /></div>
                             </td>
                             <td className="py-1.5 pr-2">
                               <Input value={a.result} onChange={e => updateAncillary(activeSpecimen, ai, 'result', e.target.value)} className="h-7 w-28 text-xs" placeholder="Positive / Negative" />
