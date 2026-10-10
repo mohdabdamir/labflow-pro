@@ -28,10 +28,10 @@ export default function APSettings() {
   }
   const first = canT ? 'templates' : canM ? 'masters' : 'approvals';
   return (
-    <div className="p-6 space-y-4 max-w-6xl mx-auto">
+    <div className="p-6 space-y-4 max-w-6xl mx-auto w-full min-w-0">
       <h1 className="text-2xl font-bold text-foreground">Anatomic Pathology Settings</h1>
       <Tabs defaultValue={first}>
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           {canT && <TabsTrigger value="templates">Templates</TabsTrigger>}
           {canM && <TabsTrigger value="masters">Masters</TabsTrigger>}
           {canM && <TabsTrigger value="clients">Clients & Physicians</TabsTrigger>}
@@ -60,7 +60,7 @@ export default function APSettings() {
       setEdit(null);
     };
     return (
-      <div className="grid md:grid-cols-[1fr_380px] gap-4 mt-3">
+      <div className="grid md:grid-cols-[minmax(0,1fr)_380px] gap-4 mt-3">
         <Card><CardContent className="pt-4 space-y-3">
           <div className="flex gap-2">
             <div className="w-56"><SearchableSelect value={field} onChange={v => setField(v as APTemplateField | 'all')}

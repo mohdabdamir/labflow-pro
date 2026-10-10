@@ -17,6 +17,7 @@ import ReportingPage from "./pages/radiology/ReportingPage";
 import ReportsListPage from "./pages/radiology/ReportsListPage";
 import AdminPage from "./pages/radiology/AdminPage";
 import CasesPage from "./pages/CasesPage";
+import APSettings from './pages/ap/APSettings';
 import APLayout from "./pages/ap/APLayout";
 import APDashboard from "./pages/ap/APDashboard";
 import APCaseCreation from "./pages/ap/APCaseCreation";
@@ -101,7 +102,7 @@ const App = () => (
               <Route path="cases/:id/grossing" element={<APGrossing />} />
               <Route path="cases/:id/transcription" element={<APTranscription />} />
               <Route path="billing-codes" element={<APBillingCodes />} />
-              <Route path="settings" element={<APDashboard />} />
+              <Route path="settings" element={<APSettings />} />
             </Route>
 
             {/* Pharmacy module */}
