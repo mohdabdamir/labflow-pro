@@ -41,6 +41,7 @@ const COMMON_STAINS = [
 ];
 
 export default function APTranscription() {
+  const stainMaster = useAPConfig().masterValues("stains");
   const { id } = useParams();
   const navigate = useNavigate();
   const { getCaseById, updateCase } = useAPCases();
