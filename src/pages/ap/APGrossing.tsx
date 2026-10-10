@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { TemplatePicker } from '@/components/ap/TemplatePicker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, Save, FlaskConical, Plus, Trash2, CheckCircle2 } from 'lucide-react';
@@ -129,7 +130,7 @@ export default function APGrossing() {
 
             {/* Gross Description */}
             <div className="space-y-1.5">
-              <Label className="font-semibold">Gross Description</Label>
+              <div className="flex items-center justify-between"><Label className="font-semibold">Gross Description</Label><TemplatePicker field="grossDescription" value={sp.grossDescription ?? ''} onChange={v => updateSpecimen(si, 'grossDescription', v)} /></div>
               <Textarea
                 value={sp.grossDescription ?? ''}
                 onChange={e => updateSpecimen(si, 'grossDescription', e.target.value)}

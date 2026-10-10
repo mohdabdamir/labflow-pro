@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { TemplatePicker } from '@/components/ap/TemplatePicker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -172,7 +173,7 @@ export default function APTranscription() {
               <CardContent className="space-y-4">
                 {/* Microscopic Findings */}
                 <div className="space-y-1.5">
-                  <Label className="font-semibold flex items-center gap-1.5"><FileText className="h-4 w-4" />Microscopic Findings</Label>
+                  <div className="flex items-center justify-between"><Label className="font-semibold flex items-center gap-1.5"><FileText className="h-4 w-4" />Microscopic Findings</Label><TemplatePicker field="microscopicFindings" value={sp.microscopicFindings ?? ''} onChange={v => updateSpecimen(activeSpecimen, 'microscopicFindings', v)} /></div>
                   <Textarea
                     value={sp.microscopicFindings ?? ''}
                     onChange={e => updateSpecimen(activeSpecimen, 'microscopicFindings', e.target.value)}
@@ -184,7 +185,7 @@ export default function APTranscription() {
 
                 {/* Diagnosis */}
                 <div className="space-y-1.5">
-                  <Label className="font-semibold flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" />Diagnosis</Label>
+                  <div className="flex items-center justify-between"><Label className="font-semibold flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" />Diagnosis</Label><TemplatePicker field="diagnosis" value={sp.diagnosis ?? ''} onChange={v => updateSpecimen(activeSpecimen, 'diagnosis', v)} /></div>
                   <Textarea
                     value={sp.diagnosis ?? ''}
                     onChange={e => updateSpecimen(activeSpecimen, 'diagnosis', e.target.value)}
@@ -261,6 +262,7 @@ export default function APTranscription() {
                         </div>
                         <div className="col-span-2 space-y-1">
                           <Label className="text-[10px]">Frozen Section Diagnosis</Label>
+                          <TemplatePicker field="frozenDiagnosis" value={fs.diagnosis ?? ''} onChange={v => updateFrozen(activeSpecimen, fi, 'diagnosis', v)} />
                           <Textarea value={fs.diagnosis} onChange={e => updateFrozen(activeSpecimen, fi, 'diagnosis', e.target.value)} rows={2} className="text-xs" />
                         </div>
                         <div className="col-span-2 space-y-1">
@@ -347,7 +349,7 @@ export default function APTranscription() {
         {/* Pathologist Comment (global) */}
         <Card className="border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Pathologist Comment <span className="text-muted-foreground font-normal">(appears on report)</span></CardTitle>
+            <div className="flex items-center justify-between"><CardTitle className="text-sm">Pathologist Comment <span className="text-muted-foreground font-normal">(appears on report)</span></CardTitle><TemplatePicker field="comment" value={comment} onChange={setComment} /></div>
           </CardHeader>
           <CardContent>
             <Textarea

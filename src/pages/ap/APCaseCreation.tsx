@@ -20,6 +20,11 @@ import {
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { useAPConfig } from '@/hooks/useAPConfig';
+import { SearchableSelect, SearchableMultiSelect } from '@/components/ap/SearchableSelect';
+import { TemplatePicker } from '@/components/ap/TemplatePicker';
+import { NewPhysicianDialog } from '@/components/ap/NewPhysicianDialog';
+import { UserPlus } from 'lucide-react';
 
 const STEPS = [
   { id: 1, label: 'Client & Physician', icon: Building2 },
@@ -32,20 +37,6 @@ function genId() { return Date.now().toString(36) + Math.random().toString(36).s
 
 const SPECIMEN_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-const CASE_TYPES = [
-  'Biopsy', 'Resection', 'Cytology', 'Autopsy', 'Frozen Section',
-  'Bone Marrow', 'Fine Needle Aspiration', 'Excision', 'Curettage',
-];
-
-const CLIENTS = [
-  { id: 'CLT001', name: 'Gulf Medical Hospital', type: 'B2B' as const },
-  { id: 'CLT002', name: 'National Health Clinic', type: 'B2B' as const },
-  { id: 'CLT003', name: 'Al-Hilal Medical Centre', type: 'B2B' as const },
-  { id: 'CLT004', name: 'Bahrain Specialist Hospital', type: 'B2B' as const },
-  { id: 'SELF',   name: 'Walk-In / Self-Pay', type: 'B2C' as const },
-];
-
-const PHYSICIANS = ['Dr. Sarah Al-Rashidi', 'Dr. Khalid Al-Dosari', 'Dr. Hana Al-Zayani', 'Dr. Ali Al-Saeedi', 'Dr. Fawzi Al-Qasim', 'Dr. Mariam Al-Nasser', 'Dr. Yousif Al-Mannai'];
 
 type FormState = {
   // Step 1
@@ -54,7 +45,7 @@ type FormState = {
   clientType: 'B2C' | 'B2B';
   treatingPhysician: string;
   referringPhysician: string;
-  ccPhysicians: string;
+  ccPhysicians: string[];
   // Step 2
   patientId: string;
   patientName: string;
@@ -80,10 +71,14 @@ export default function APCaseCreation() {
   const { addCase, cases } = useAPCases();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const { config, masterValues, can } = useAPConfig();
+  const CLIENTS = config.clients.filter(c => c.active);
+  const CASE_TYPES = masterValues('caseTypes');
+  const [physOpen, setPhysOpen] = useState(false);
 
   const [form, setForm] = useState<FormState>({
     clientId: '', clientName: '', clientType: 'B2B',
-    treatingPhysician: '', referringPhysician: '', ccPhysicians: '',
+    treatingPhysician: '', referringPhysician: '', ccPhysicians: [],
     patientId: '', patientName: '', patientDob: '', patientAge: '',
     patientGender: 'M', patientMobile: '', patientEmail: '',
     caseType: 'Biopsy', clinicalHistory: '', clinicalIndication: '',
@@ -93,6 +88,8 @@ export default function APCaseCreation() {
     billingEntries: [],
   });
 
+  const physOptions = (CLIENTS.find(c => c.id === form.clientId)?.physicians ?? [])
+    .map(p => ({ value: p.name, label: p.name, hint: p.pending ? 'Pending approval' : p.mobile }));
   const set = (field: keyof FormState, value: unknown) => setForm(f => ({ ...f, [field]: value }));
 
   const handleSpecimenCount = (n: number) => {
@@ -109,6 +106,7 @@ export default function APCaseCreation() {
       set('clientId', clientId);
       set('clientName', client.name);
       set('clientType', client.type);
+      if (clientId !== form.clientId) { set('treatingPhysician', ''); set('referringPhysician', ''); set('ccPhysicians', []); }
     }
   };
 
@@ -166,7 +164,7 @@ export default function APCaseCreation() {
       clientId: form.clientId, clientName: form.clientName, clientType: form.clientType,
       treatingPhysician: form.treatingPhysician,
       referringPhysician: form.referringPhysician || undefined,
-      ccPhysicians: form.ccPhysicians ? form.ccPhysicians.split(',').map(s => s.trim()).filter(Boolean) : [],
+      ccPhysicians: form.ccPhysicians,
       patientId: form.patientId, patientName: form.patientName,
       patientDob: form.patientDob || undefined,
       patientAge: form.patientAge ? parseInt(form.patientAge) : undefined,
@@ -240,37 +238,41 @@ export default function APCaseCreation() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Client <span className="text-destructive">*</span></Label>
-                  <Select value={form.clientId} onValueChange={handleClientChange}>
-                    <SelectTrigger><SelectValue placeholder="Select client..." /></SelectTrigger>
-                    <SelectContent>
-                      {CLIENTS.map(c => <SelectItem key={c.id} value={c.id}>{c.name} <span className="text-muted-foreground text-xs">({c.type})</span></SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect value={form.clientId} onChange={handleClientChange} placeholder="Search client..."
+                    options={CLIENTS.map(c => ({ value: c.id, label: c.name, hint: c.type }))} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Client Type</Label>
                   <Input value={form.clientType} disabled className="bg-muted" />
                 </div>
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">Physicians {form.clientId ? `at ${form.clientName}` : ''}</span>
+                {can('requestPhysician') && (
+                  <Button type="button" size="sm" variant="outline" disabled={!form.clientId} onClick={() => setPhysOpen(true)}>
+                    <UserPlus className="h-4 w-4 mr-1" />New physician
+                  </Button>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Treating Physician <span className="text-destructive">*</span></Label>
-                  <Select value={form.treatingPhysician} onValueChange={v => set('treatingPhysician', v)}>
-                    <SelectTrigger><SelectValue placeholder="Select physician..." /></SelectTrigger>
-                    <SelectContent>
-                      {PHYSICIANS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect value={form.treatingPhysician} onChange={v => set('treatingPhysician', v)} disabled={!form.clientId}
+                    placeholder={form.clientId ? 'Search physician...' : 'Select client first'} options={physOptions} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Referring Physician</Label>
-                  <Input value={form.referringPhysician} onChange={e => set('referringPhysician', e.target.value)} placeholder="Optional" />
+                  <SearchableSelect value={form.referringPhysician} onChange={v => set('referringPhysician', v)} disabled={!form.clientId}
+                    placeholder="Optional" options={physOptions} />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>CC Physicians <span className="text-xs text-muted-foreground">(comma-separated)</span></Label>
-                <Input value={form.ccPhysicians} onChange={e => set('ccPhysicians', e.target.value)} placeholder="Dr. A, Dr. B, ..." />
+                <Label>CC Physicians</Label>
+                <SearchableMultiSelect values={form.ccPhysicians} onChange={v => set('ccPhysicians', v)} disabled={!form.clientId}
+                  placeholder="Add CC physicians..." options={physOptions} />
               </div>
+              <NewPhysicianDialog open={physOpen} onOpenChange={setPhysOpen} clientId={form.clientId}
+                onCreated={p => { if (!form.treatingPhysician) set('treatingPhysician', p.name); }} />
             </div>
           )}
 
@@ -327,12 +329,7 @@ export default function APCaseCreation() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <Label>Case Type <span className="text-destructive">*</span></Label>
-                  <Select value={form.caseType} onValueChange={v => set('caseType', v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CASE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect value={form.caseType} onChange={v => set('caseType', v)} options={CASE_TYPES.map(t => ({ value: t, label: t }))} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Number of Specimens <span className="text-destructive">*</span></Label>
@@ -341,22 +338,15 @@ export default function APCaseCreation() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Priority</Label>
-                  <Select value={form.priority} onValueChange={v => set('priority', v as 'routine' | 'urgent' | 'stat')}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="routine">Routine</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                      <SelectItem value="stat">STAT</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect value={form.priority} onChange={v => set('priority', v)} options={[{ value: 'routine', label: 'Routine' }, { value: 'urgent', label: 'Urgent' }, { value: 'stat', label: 'STAT' }]} />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>Clinical History</Label>
+                <div className="flex items-center justify-between"><Label>Clinical History</Label><TemplatePicker field="clinicalHistory" value={form.clinicalHistory} onChange={v => set('clinicalHistory', v)} /></div>
                 <Textarea value={form.clinicalHistory} onChange={e => set('clinicalHistory', e.target.value)} rows={2} placeholder="Relevant clinical history..." />
               </div>
               <div className="space-y-1.5">
-                <Label>Clinical Indication</Label>
+                <div className="flex items-center justify-between"><Label>Clinical Indication</Label><TemplatePicker field="clinicalIndication" value={form.clinicalIndication} onChange={v => set('clinicalIndication', v)} /></div>
                 <Textarea value={form.clinicalIndication} onChange={e => set('clinicalIndication', e.target.value)} rows={2} placeholder="Reason for submission / indication..." />
               </div>
 
@@ -375,7 +365,7 @@ export default function APCaseCreation() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-xs">Specimen Name / Description</Label>
+                        <div className="flex items-center justify-between"><Label className="text-xs">Specimen Name / Description</Label><TemplatePicker field="specimenName" value={sp.specimenName} onChange={v => { const upd = [...form.specimensData]; upd[i] = { ...upd[i], specimenName: v }; set('specimensData', upd); }} /></div>
                         <Input
                           value={sp.specimenName}
                           onChange={e => {
@@ -388,7 +378,7 @@ export default function APCaseCreation() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Specimen Deficiencies</Label>
+                        <div className="flex items-center justify-between"><Label className="text-xs">Specimen Deficiencies</Label><TemplatePicker field="deficiencies" value={sp.deficiencies} onChange={v => { const upd = [...form.specimensData]; upd[i] = { ...upd[i], deficiencies: v }; set('specimensData', upd); }} /></div>
                         <Input
                           value={sp.deficiencies}
                           onChange={e => {
@@ -406,7 +396,7 @@ export default function APCaseCreation() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>Additional Notes</Label>
+                <div className="flex items-center justify-between"><Label>Additional Notes</Label><TemplatePicker field="notes" value={form.notes} onChange={v => set('notes', v)} /></div>
                 <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} placeholder="Any other relevant information..." />
               </div>
             </div>
